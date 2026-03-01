@@ -1,17 +1,18 @@
-from models.User import User
 from models.PublicInformation import PublicInformation
-
-#from user_repository import UserRepository //yet to create UserRepository
+from UserRepository import UserRepository
 
 
 class UserService:
     def __init__(self, repo: UserRepository):
-        self.__user_repo = repo
+        self.__repo = repo
 
-    
-
-    def update_public_profile(self, user: User, public_info: PublicInformation) -> User:
-        user.get_public_info().set_username(public_info.get_username())
-        user.get_public_info().set_bio(public_info.get_bio())
-        self.__user_repo.save(user)
-        return user
+    def update_public_profile(self, user_id: str, username: str, bio: str = '') -> PublicInformation:
+        public_info = PublicInformation(
+            user_id=user_id,
+            username=username,
+            bio=bio
+        )
+        success = self.__repo.save(public_info)
+        if not success:
+            raise Exception("Failed to update public profile")
+        return public_info
