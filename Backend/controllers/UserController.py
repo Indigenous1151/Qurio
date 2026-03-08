@@ -20,13 +20,22 @@ class UserController:
     def update_personal_information(self):
         data: dict = request.get_json()
         try:
-            user: User = data.get('user')
-            personal_info = PersonalInformation(
+            user_id = request.headers.get('X-User-Id')
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), 401
+
+            updated = self.__service.update_personal_information(
+                user_id=user_id,
                 full_name=data['full_name'],
-                email=data['email'],
-                user_id=data['user_id']
+                email=data['email']
             )
-            updated_user = self.__service.update_personal_information(user, personal_info)
-            return jsonify({"message": "Personal information updated", "user_id": updated_user.get_personal_info().get_user_id()}), 200
+            return jsonify({
+                "message": "Personal information updated successfully",
+                "user_id": updated.get_user_id(),
+                "full_name": updated.get_full_name(),
+                "email": updated.get_email()
+            }), 200
+        except KeyError as e:
+            return jsonify({"error": f"Missing field: {str(e)}"}), 400
         except Exception as e:
-            return jsonify({"error": str(e)}), 400
+            return jsonify({"error": str(e)}), 500

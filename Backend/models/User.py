@@ -1,4 +1,4 @@
-from PersonalInformation import PersonalInformation
+from models.PersonalInformation import PersonalInformation
 
 
 class User:
