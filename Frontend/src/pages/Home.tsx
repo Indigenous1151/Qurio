@@ -1,13 +1,12 @@
-import {Link} from 'react-router-dom'
+import {Link} from 'react-router-dom';
+import { Navbar } from '../components/navbar';
 
 
-export function Home(){
-    return(
-        <>
-
-            <h1>Welcome to Qurio!</h1>   
-            {/* <Link to="/">Home</Link> */}
-            <Link to="/UpdatePersonalInformation">Update Personal Information</Link>     
-        </>
-    )
+export function Home() {
+  return (
+    <div>
+      <Navbar />
+      <h1 className="center-title">Welcome to Qurio!</h1>
+    </div>
+  );
 }
