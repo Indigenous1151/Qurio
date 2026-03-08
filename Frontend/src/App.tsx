@@ -17,12 +17,6 @@ function App() {
       </Routes>
     </Router>
     
-    // <>
-    // <div>
-    //   <h1>Welcome to Qurio!</h1>
-    // </div>
-
-    // </>
   )
 }
 
