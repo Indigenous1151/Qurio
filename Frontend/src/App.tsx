@@ -5,6 +5,7 @@ import './App.css'
 import {HashRouter as Router, Routes, Route} from 'react-router-dom' 
 import { Home } from './pages/Home'
 import { UpdatePersonalInformation } from './pages/UpdatePersonalInformation'
+import { UpdatePublicInformation } from './pages/UpdatePublicInformation'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home/>} />
         <Route path="/UpdatePersonalInformation" element={<UpdatePersonalInformation/>} />
+        <Route path="/UpdatePublicInformation" element={<UpdatePublicInformation/>} />
       </Routes>
     </Router>
     
