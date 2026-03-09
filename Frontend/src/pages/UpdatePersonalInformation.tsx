@@ -9,6 +9,7 @@ export function UpdatePersonalInformation(){
 
   const [full_name, setName] = useState("");
   const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
 
 
   const handleSubmit = async () => {
