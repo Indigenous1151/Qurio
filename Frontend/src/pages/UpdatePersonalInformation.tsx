@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/footer';
 import '../details/UpdateInformation.css';
-
+import { supabase } from "../SupabaseClient";
 
 export function UpdatePersonalInformation(){
 
@@ -11,9 +11,47 @@ export function UpdatePersonalInformation(){
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
-  const handleSubmit = () => {
-    console.log("Form submitted with value:", name, password, email);
-  }
+
+  const handleSubmit = async () => {
+    try {
+        // // temporary login for testing - remove later
+        // await supabase.auth.signInWithPassword({
+        //     email: 'newuser2@gmail.com',
+        //     password: 'abc'
+        // });
+
+        // const { data: { user } } = await supabase.auth.getUser();
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        //console.log("Current user ID:", user?.id); -- remove later, just for testing
+        if (!user) {
+            console.error("No user logged in");
+            return;
+        }
+
+        const response = await fetch('http://localhost:5000/user/personal', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': user.id
+            },
+            body: JSON.stringify({
+                full_name: name,
+                email: email
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log("Updated successfully:", data);
+        } else {
+            console.error("Error:", data.error);
+        }
+    } catch (error) {
+        console.error("Request failed:", error);
+    }
+}
 
   return(
   <div>
