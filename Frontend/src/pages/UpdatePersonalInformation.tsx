@@ -9,28 +9,48 @@ export function UpdatePersonalInformation(){
 
   const [full_name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState(""); 
 
-const handleSubmit = async () => {
-  try {
-    setMessage("Updating...");
-    
-    const { data, error } = await supabase
-      .from("users")
-      .update({ full_name, email })
-      .eq("id", "fd261c55-e149-43cf-9a8c-2a259b64ed58"); // THIS NEEDS TO CHANGE TO MATCH CURRENT USER!!!!
-    
-    if (error) {
-      setMessage(`Error: ${error.message}`);
-    } else {
-      setMessage("Updated successfully!");
-      console.log("Updated user:", data);
+
+  const handleSubmit = async () => {
+    try {
+        // // temporary login for testing - remove later
+        // await supabase.auth.signInWithPassword({
+        //     email: 'newuser2@gmail.com',
+        //     password: 'abc'
+        // });
+
+        // const { data: { user } } = await supabase.auth.getUser();
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        //console.log("Current user ID:", user?.id); -- remove later, just for testing
+        if (!user) {
+            console.error("No user logged in");
+            return;
+        }
+
+        const response = await fetch('http://localhost:5000/user/personal', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': user.id
+            },
+            body: JSON.stringify({
+                full_name: name,
+                email: email
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log("Updated successfully:", data);
+        } else {
+            console.error("Error:", data.error);
+        }
+    } catch (error) {
+        console.error("Request failed:", error);
     }
-  } catch (err) {
-    console.error(err);
-    setMessage("Failed to update personal information");
-  }
-};
+}
 
   return(
   <div>
