@@ -29,5 +29,6 @@ UserController(service=user_service)
 app.register_blueprint(user_bp)
 
 if __name__ == '__main__':
+    print(app.url_map)
     app.run(debug=True)
    
