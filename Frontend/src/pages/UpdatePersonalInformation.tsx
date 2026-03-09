@@ -1,44 +1,50 @@
 
 import { useState } from "react";
 import { Navbar } from '../components/navbar';
-import { Footer } from '../components/footer';
+import { Footer } from '../components/Footer';
 import '../details/UpdateInformation.css';
-
+import { supabase } from '../supabaseClient/supabaseClient.js';
 
 export function UpdatePersonalInformation(){
 
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
+  const [full_name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [message, setMessage] = useState(""); 
 
-  const handleSubmit = () => {
-    console.log("Form submitted with value:", name, password, email);
+const handleSubmit = async () => {
+  try {
+    setMessage("Updating...");
+    
+    const { data, error } = await supabase
+      .from("users")
+      .update({ full_name, email })
+      .eq("id", "fd261c55-e149-43cf-9a8c-2a259b64ed58"); // THIS NEEDS TO CHANGE TO MATCH CURRENT USER!!!!
+    
+    if (error) {
+      setMessage(`Error: ${error.message}`);
+    } else {
+      setMessage("Updated successfully!");
+      console.log("Updated user:", data);
+    }
+  } catch (err) {
+    console.error(err);
+    setMessage("Failed to update personal information");
   }
+};
 
   return(
   <div>
     <Navbar></Navbar>
-      <h1 className = "update-personal-info-title">Update Personal Information!</h1>
+      <h1 className = "update-info-title">Update Personal Information!</h1>
       <div className = "enter-info-box">
         <div className = "enter-info-small-box">
         <label>
           Enter new name:
           <input
             type="text"
-            value={name}
+            value={full_name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter name..."
-          />
-        </label>
-        </div>
-        <div className = "enter-info-small-box">
-        <label>
-          Enter new password:
-          <input
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter password..."
           />
         </label>
         </div>
@@ -53,9 +59,8 @@ export function UpdatePersonalInformation(){
           />
         </label>
         </div>
-        <div>
         <button className = "update-button" onClick={handleSubmit}>Update Personal Information</button>
-      </div>
+        <p>{message}</p>
       </div>
       <Footer></Footer>
     </div>
