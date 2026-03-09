@@ -57,3 +57,15 @@ class UserController:
             return jsonify({"error": f"Missing field: {str(e)}"}), 400
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+
+    def create_account(self):
+        pass
+
+    def login(self):
+        pass
+
+    def signout(self):
+        pass
+
+    def forgot_password(self):
+        pass
