@@ -1,14 +1,14 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+
 import './App.css'
 import {HashRouter as Router, Routes, Route} from 'react-router-dom' 
 import { Home } from './pages/Home'
 import { UpdatePersonalInformation } from './pages/UpdatePersonalInformation'
 import { UpdatePublicInformation } from './pages/UpdatePublicInformation'
-
+import { ResultScreen } from './pages/ResultScreen'
+import { TriviaGame } from './pages/TriviaGame'
+import { ClassicGame } from './pages/ClassicGame'
 function App() {
-  // const [count, setCount] = useState(0)
+ 
 
   return (
     <Router>
@@ -16,6 +16,9 @@ function App() {
         <Route path="/" element={<Home/>} />
         <Route path="/UpdatePersonalInformation" element={<UpdatePersonalInformation/>} />
         <Route path="/UpdatePublicInformation" element={<UpdatePublicInformation/>} />
+        <Route path="/game/setup" element={<ClassicGame />} />
+        <Route path="/game/play" element={<TriviaGame />} />
+        <Route path="/game/score" element={<ResultScreen />} />
       </Routes>
     </Router>
     
