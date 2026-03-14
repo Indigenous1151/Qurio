@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services.UserService import UserService
+from utils.HttpStatus import HttpStatus
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -24,7 +25,7 @@ class UserController:
         try:
             user_id = request.headers.get('X-User-Id')
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
             updated = self.__service.update_personal_information(
                 user_id=user_id,
@@ -36,18 +37,18 @@ class UserController:
                 "user_id": updated.get_user_id(),
                 "full_name": updated.get_full_name(),
                 "email": updated.get_email()
-            }), 200
+            }), HttpStatus.OK
         except KeyError as e:
-            return jsonify({"error": f"Missing field: {str(e)}"}), 400
+            return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def update_public_profile(self):
         data: dict = request.get_json()
         try:
             user_id = request.headers.get('X-User-Id')
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
             updated = self.__service.update_public_profile(
                 user_id=user_id,
@@ -58,11 +59,11 @@ class UserController:
                 "message": "Public profile updated successfully",
                 "username": updated.get_username(),
                 "bio": updated.get_bio()
-            }), 200
+            }), HttpStatus.OK
         except KeyError as e:
-            return jsonify({"error": f"Missing field: {str(e)}"}), 400
+            return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def create_account(self):
         data: dict = request.get_json()
@@ -79,11 +80,11 @@ class UserController:
                 "user_id": user.get_user_id(),
                 "email": user.get_email(),
                 "username": user.get_username()
-            }), 201
+            }), HttpStatus.CREATED
         except KeyError as e:
-            return jsonify({"error": f"Missing field: {str(e)}"}), 400
+            return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def login(self):
         data: dict = request.get_json()
@@ -99,11 +100,11 @@ class UserController:
                 "access_token": session.access_token,
                 "refresh_token": session.refresh_token,
                 "user_id": session.user.id # Supabase auth user object
-            }), 200
+            }), HttpStatus.OK
         except KeyError as e:
-            return jsonify({"error": f"Missing field {str(e)}"}), 400
+            return jsonify({"error": f"Missing field {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def signout(self):
         pass
