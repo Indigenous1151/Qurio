@@ -97,9 +97,7 @@ class UserController:
 
             return jsonify({
                 "message": "Login Successful",
-                "access_token": session.access_token,
-                "refresh_token": session.refresh_token,
-                "user_id": session.user.id # Supabase auth user object
+                "user_id": user.get_user_id()
             }), HttpStatus.OK
         except KeyError as e:
             return jsonify({"error": f"Missing field {str(e)}"}), HttpStatus.BAD_REQUEST
@@ -107,7 +105,17 @@ class UserController:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def signout(self):
-        pass
+        try:
+            user_id = request.headers.get("X-User-Id")
+
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            self.__service.signout()
+
+            return jsonify({"message": "Logged out successfully"}), HttpStatus.OK
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def forgot_password(self):
         pass
