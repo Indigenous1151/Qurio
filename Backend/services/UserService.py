@@ -1,5 +1,6 @@
 from models.PersonalInformation import PersonalInformation
 from models.PublicInformation import PublicInformation
+from models.User import User
 from UserRepository import UserRepository
 
 
@@ -28,3 +29,15 @@ class UserService:
         if not success:
             raise Exception("Failed to update public profile")
         return public_info
+
+    def create_account(self, username: str, email:str, password: str) -> User:
+        pass
+
+    def login(self, email: str, password: str) -> User:
+        pass
+
+    def signout(self):
+        pass
+
+    def forgot_password(self, email: str):
+        pass
