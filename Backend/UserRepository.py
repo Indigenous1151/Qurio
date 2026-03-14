@@ -1,6 +1,7 @@
 from database.SupabaseClient import SupabaseClient
 from models.PersonalInformation import PersonalInformation
 from models.PublicInformation import PublicInformation
+from models.User import User
 
 
 class UserRepository:
@@ -33,3 +34,26 @@ class UserRepository:
         except Exception as e:
             print(f"Error saving public info: {e}")
             return False
+
+    def create_auth_user(self, username: str, email: str, password: str) -> str:
+
+        response = self.__db_client.auth.sign_up({
+            "email": email,
+            "password": password
+        })
+
+        if not response:
+            raise Exception("Failed to create user")
+
+        user_id = response.user.id
+
+        result = self.__db_client.table("public_profile").insert({
+            "user_id": user_id,
+            "username": username,
+            "bio": ""
+        }).execute()
+
+        if not result:
+            raise Exception("Failed to create public profile")
+
+        return user_id
