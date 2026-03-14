@@ -65,7 +65,25 @@ class UserController:
             return jsonify({"error": str(e)}), 500
 
     def create_account(self):
-        pass
+        data: dict = request.get_json()
+
+        try:
+            user = self.__service.create_account(
+                username=data['username'],
+                email=data['email'],
+                password=data['password']
+            )
+
+            return jsonify({
+                "message": "Account created successfully",
+                "user_id": user.get_user_id(),
+                "email": user.get_email(),
+                "username": user.get_username()
+            }), 201
+        except KeyError as e:
+            return jsonify({"error": f"Missing field: {str(e)}"}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     def login(self):
         pass
