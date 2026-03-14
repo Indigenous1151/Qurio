@@ -90,7 +90,7 @@ class UserController:
         data: dict = request.get_json()
 
         try:
-            session = self.__service.login(
+            user = self.__service.login(
                 email = data['email'],
                 password = data['password']
             )
