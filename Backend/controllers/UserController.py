@@ -86,7 +86,24 @@ class UserController:
             return jsonify({"error": str(e)}), 500
 
     def login(self):
-        pass
+        data: dict = request.get_json()
+
+        try:
+            session = self.__service.login(
+                email = data['email'],
+                password = data['password']
+            )
+
+            return jsonify({
+                "message": "Login Successful",
+                "access_token": session.access_token,
+                "refresh_token": session.refresh_token,
+                "user_id": session.user.id # Supabase auth user object
+            }), 200
+        except KeyError as e:
+            return jsonify({"error": f"Missing field {str(e)}"}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     def signout(self):
         pass
