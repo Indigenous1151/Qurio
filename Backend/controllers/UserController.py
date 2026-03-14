@@ -118,4 +118,17 @@ class UserController:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def forgot_password(self):
-        pass
+        data: dict = request.get_json()
+
+        try:
+            self.__service.forgot_password(
+                email=data['email']
+            )
+
+            return jsonify({
+                "Message": "Password reset email sent"
+            }), HttpStatus.OK
+        except KeyError as e:
+            return jsonify({"error": f"Missing field {str(e)}"}), HttpStatus.BAD_REQUEST
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
