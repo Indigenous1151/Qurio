@@ -10,8 +10,14 @@ class UserController:
         self.__register_routes()
 
     def __register_routes(self):
+        # PUT routes
         user_bp.add_url_rule('/personal', 'update_personal', self.update_personal_information, methods=['PUT'])
         user_bp.add_url_rule('/profile', 'update_profile', self.update_public_profile, methods=['PUT'])
+        # POST routes
+        user_bp.add_url_rule('/register', 'register', self.create_account, methods=['POST'])
+        user_bp.add_url_rule('/login', 'login', self.login, methods=['POST'])
+        user_bp.add_url_rule('/signout', 'signout', self.signout, methods=['POST'])
+        user_bp.add_url_rule('/forgot-password', 'forgot_password', self.forgot_password, methods=['POST'])
 
     def update_personal_information(self):
         data: dict = request.get_json()
