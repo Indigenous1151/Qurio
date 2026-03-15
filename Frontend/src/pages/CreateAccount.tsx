@@ -50,7 +50,7 @@ export function CreateAccount() {
         return;
       }
 
-      setSuccessMessage("Account created successfully! Please verify email and sign in.");
+      setSuccessMessage("Account created successfully! Please sign in.");
       setUsername("");
       setEmail("");
       setPassword("");
