@@ -47,7 +47,7 @@ export function ClassicGame() {
 
         <div className="bg-[#638F77] rounded-2xl p-8 flex flex-col gap-6">
 
-          {/* Category */}
+          
           <div className="flex flex-col gap-2">
             <label className="text-white font-semibold text-sm uppercase tracking-wide">
               Category
@@ -64,7 +64,7 @@ export function ClassicGame() {
             </select>
           </div>
 
-          {/* Difficulty */}
+          
           <div className="flex flex-col gap-2">
             <label className="text-white font-semibold text-sm uppercase tracking-wide">
               Difficulty
@@ -86,7 +86,7 @@ export function ClassicGame() {
             </div>
           </div>
 
-          {/* Question Count */}
+          
           <div className="flex flex-col gap-2">
             <label className="text-white font-semibold text-sm uppercase tracking-wide">
               Number of Questions
@@ -108,12 +108,12 @@ export function ClassicGame() {
             </div>
           </div>
 
-          {/* Start Button */}
+          
           <button
             onClick={handleStart}
             className="w-full bg-white text-[#638F77] font-bold py-3 rounded-xl text-base mt-2 hover:bg-gray-100 transition-all cursor-pointer border-none"
           >
-            Start Game →
+            Start Game 
           </button>
 
         </div>

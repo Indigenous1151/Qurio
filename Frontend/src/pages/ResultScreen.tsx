@@ -49,7 +49,7 @@ export function ResultScreen() {
             ))}
           </div>
 
-          {/* Actions */}
+         
           <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
             {!isDaily && (
               <button

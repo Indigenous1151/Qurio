@@ -51,7 +51,20 @@ export function Home() {
               </Link>
             </div>
 
-           
+           <div className="bg-[#638F77] rounded-2xl p-6 sm:p-8 text-left text-white shadow-lg">
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📅</div>
+              <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ fontFamily: "'Georgia', serif" }}>
+                Daily Challenge
+              </h2>
+              <p className="text-white/70 text-sm mb-5 sm:mb-6">
+                A fresh set of questions every day.
+              </p>
+              <Link to="/game/daily">
+                <button className="inline-flex items-center gap-2 bg-white text-[#638F77] font-bold text-sm px-5 py-2.5 rounded-full hover:gap-3 transition-all duration-200 cursor-pointer border-none">
+                  Play Now
+                </button>
+              </Link>
+            </div>
 
           </div>
 
