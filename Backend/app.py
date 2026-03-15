@@ -5,7 +5,9 @@ from flask_cors import CORS
 from database.SupabaseClient import SupabaseClient
 from UserRepository import UserRepository
 from services.UserService import UserService
+from services.AuthService import AuthService
 from controllers.UserController import UserController, user_bp
+from controllers.AuthController import AuthController, auth_bp
 
 load_dotenv()
 
