@@ -30,14 +30,21 @@ class AuthController:
 
             return jsonify({
                 "message": "Account created successfully",
-                "user_id": user.get_user_id(),
-                "email": user.get_email(),
-                "username": user.get_username()
+                "user_id": user.get_personal_info().get_user_id(),
+                "email": user.get_personal_info().get_email(),
+                "username": user.get_public_info().get_username()
             }), HttpStatus.CREATED
         except KeyError as e:
             return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:
-            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+            error_text = str(e)
+
+            if "public_profile_username_key" in error_text or (
+                "already exists" in error_text.lower() and "username" in error_text.lower()
+            ):
+                return jsonify({"error": "That username is already taken."}), HttpStatus.BAD_REQUEST
+
+            return jsonify({"error": error_text}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def login(self):
         data: dict = request.get_json()

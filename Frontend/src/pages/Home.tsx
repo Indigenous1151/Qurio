@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import { Navbar } from '../components/navbar';
-import { Footer } from '../components/Footer';
+
 
 export function Home() {
   return (
-   <div className="min-h-screen bg-[#f5f0e8] pt-20 pb-20" style={{ fontFamily: "'Georgia', serif" }}>
+    <div>
       <Navbar />
 
       <div className="relative overflow-hidden">

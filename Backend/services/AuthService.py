@@ -36,7 +36,7 @@ class AuthService:
             email=user.email
         )
 
-        public_data = __repo.get_public_profile(user_id)
+        public_data = self.__repo.get_public_profile(user_id)
 
         public_info = PublicInformation(
             user_id=user_id,
@@ -44,7 +44,7 @@ class AuthService:
             bio=public_data["bio"]
         )
 
-        return User(personal_info=personal, public_info=public)
+        return User(personal_info=personal, public_info=public_info)
 
     def sign_out(self):
         return self.__repo.sign_out() # delegate responsibility to UserRepository

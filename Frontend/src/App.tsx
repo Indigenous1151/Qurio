@@ -1,6 +1,6 @@
 
 import './App.css'
-import {HashRouter as Router, Routes, Route} from 'react-router-dom' 
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom' 
 import { Home } from './pages/Home'
 import { UpdatePersonalInformation } from './pages/UpdatePersonalInformation'
 import { UpdatePublicInformation } from './pages/UpdatePublicInformation'
@@ -11,6 +11,7 @@ import { DailyGame } from './pages/DailyGame'
 import { CreateAccount } from './pages/CreateAccount'
 import { SignIn } from './pages/SignIn'
 import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
 
 function App() {
  
@@ -28,6 +29,7 @@ function App() {
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
     
