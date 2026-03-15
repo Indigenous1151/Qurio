@@ -1,65 +1,95 @@
-export function CreateAccount() {
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <div
-        style={{
-          width: "900px",
-          height: "500px",
-          display: "flex",
-          borderRadius: "30px",
-          overflow: "hidden",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            backgroundColor: "#73967f",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            color: "white",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "center",
-            }}
-          >
-            <p
-              style={{
-                fontSize: "32px",
-                margin: "0",
-              }}
-            >
-              welcome to
-            </p>
-            <h1
-              style={{
-                fontSize: "85px",
-                margin: "0",
-              }}
-            >
-              QURIO
-            </h1>
-          </div>
-        </div>
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { AuthLayout } from "../components/AuthLayout";
+import "../details/AuthForms.css";
 
-        <div
-          style={{
-            flex: 1,
-            backgroundColor: "#f5f5f5",
-          }}
-        ></div>
+export function CreateAccount() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!username || !email || !password || !confirmPassword) {
+      setErrorMessage("Empty field(s). Please fill in all required information.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    setSuccessMessage("Account form submitted successfully.");
+
+    console.log({
+      username,
+      email,
+      password,
+      confirmPassword,
+    });
+  };
+
+  return (
+    <AuthLayout>
+      <div className="auth-form-container">
+        <p className="auth-top-text">
+          Already have an account?{" "}
+          <Link to="/sign-in" className="auth-link">
+            Sign in
+          </Link>
+        </p>
+
+        <h2 className="auth-form-title">Create Account</h2>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <input
+            className="auth-input"
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+
+          <input
+            className="auth-input"
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+
+          <input
+            className="auth-input"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+
+          <input
+            className="auth-input"
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+          />
+
+          {errorMessage && <p className="auth-error">{errorMessage}</p>}
+          {successMessage && <p className="auth-success">{successMessage}</p>}
+
+          <button className="auth-button" type="submit">
+            Get Started!
+          </button>
+        </form>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
