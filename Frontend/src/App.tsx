@@ -6,6 +6,7 @@ import { UpdatePersonalInformation } from './pages/UpdatePersonalInformation'
 import { CreateAccount } from './pages/CreateAccount'
 import { SignIn } from './pages/SignIn'
 import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
 
 function App() {
  
@@ -18,6 +19,7 @@ function App() {
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
     
