@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
 import { useRef } from "react";
-import { supabase } from '../supabaseClient/supabaseClient';
+
 interface Question {
   question: string;
   correct_answer: string;
