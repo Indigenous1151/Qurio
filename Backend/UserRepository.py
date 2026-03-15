@@ -117,7 +117,7 @@ class UserRepository:
         response = client.auth.reset_password_for_email(
             email,
             {
-                "redirect_to": "http://localhost:3000/auth/reset-password"
+                "redirect_to": "http://localhost:5173/auth/reset-password"
             }
         )
 
