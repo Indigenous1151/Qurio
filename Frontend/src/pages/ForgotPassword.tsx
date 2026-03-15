@@ -20,14 +20,41 @@ export function ForgotPassword() {
       return;
     }
 
+    try {
+      setIsLoading(true);
+
+      const response = await fetch("http://127.0.0.1:5000/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data.error || data.message || "Failed to send reset email.");
+        return;
+      }
+
+      setSuccessMessage("Password reset email sent. Please check your inbox.");
+      setEmail("");
+    } catch (error) {
+      setErrorMessage("Unable to connect to the server.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AuthLayout>
       <div className="auth-form-container">
         <p className="auth-top-text">
+          Back to {" "}
           <Link to="/sign-in" className="auth-link">
-            Back to Sign In
+            Sign In
           </Link>
         </p>
 
