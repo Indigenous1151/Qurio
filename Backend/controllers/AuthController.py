@@ -14,8 +14,9 @@ class AuthController:
         # POST routes
         auth_bp.add_url_rule('/register', 'register', self.create_account, methods=['POST'])
         auth_bp.add_url_rule('/login', 'login', self.login, methods=['POST'])
-        auth_bp.add_url_rule('/signout', 'signout', self.signout, methods=['POST'])
+        auth_bp.add_url_rule('/signout', 'signout', self.sign_out, methods=['POST'])
         auth_bp.add_url_rule('/forgot-password', 'forgot_password', self.forgot_password, methods=['POST'])
+        auth_bp.add_url_rule('/reset-password', 'reset_password', self.reset_password, methods=['POST'])
 
     def create_account(self):
         data: dict = request.get_json()
@@ -49,14 +50,15 @@ class AuthController:
 
             return jsonify({
                 "message": "Login Successful",
-                "user_id": user.get_user_id()
+                "user_id": user.get_personal_info().get_user_id(),
+                "username": user.get_public_info().get_username()
             }), HttpStatus.OK
         except KeyError as e:
             return jsonify({"error": f"Missing field {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
-    def signout(self):
+    def sign_out(self):
         try:
             user_id = request.headers.get("X-User-Id")
 
@@ -73,13 +75,26 @@ class AuthController:
         data: dict = request.get_json()
 
         try:
-            self.__service.forgot_password(
-                email=data['email']
-            )
+            self.__service.forgot_password(email=data['email'])
 
             return jsonify({
                 "Message": "Password reset email sent"
             }), HttpStatus.OK
+        except KeyError as e:
+            return jsonify({"error": f"Missing field {str(e)}"}), HttpStatus.BAD_REQUEST
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+    def reset_password(self):
+        data = request.get_json()
+
+        try:
+            new_password = data["password"]
+
+            self.__service.reset_password(new_password=new_password)
+
+            return jsonify({"message": "Password reset successfully"}), HttpStatus.OK
+
         except KeyError as e:
             return jsonify({"error": f"Missing field {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:

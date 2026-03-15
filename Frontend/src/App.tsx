@@ -8,6 +8,10 @@ import { ResultScreen } from './pages/ResultScreen'
 import { TriviaGame } from './pages/TriviaGame'
 import { ClassicGame } from './pages/ClassicGame'
 import { DailyGame } from './pages/DailyGame'
+import { CreateAccount } from './pages/CreateAccount'
+import { SignIn } from './pages/SignIn'
+import { ForgotPassword } from './pages/ForgotPassword'
+
 function App() {
  
 
@@ -21,6 +25,9 @@ function App() {
         <Route path="/game/play" element={<TriviaGame />} />
         <Route path="/game/score" element={<ResultScreen />} />
         <Route path="/game/daily" element={<DailyGame />} />
+        <Route path="/create-account" element={<CreateAccount />} />
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </Router>
     

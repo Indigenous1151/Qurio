@@ -1,6 +1,7 @@
 from database.SupabaseClient import SupabaseClient
 from models.PersonalInformation import PersonalInformation
 from models.PublicInformation import PublicInformation
+from models.User import User
 
 
 class UserRepository:
@@ -33,3 +34,106 @@ class UserRepository:
         except Exception as e:
             print(f"Error saving public info: {e}")
             return False
+
+    def get_public_profile(self, user_id: str) -> dict:
+        """
+        Function to query database and get row matching user_id.
+
+        Returns:
+            dict containing columns id, user_id, username, bio, created_at, updated_at
+        """
+        client = self.__db_client.get_client()
+
+        result = (
+            client.table("public_profile")
+            .select("*")
+            .eq("user_id", user_id)
+            .single()
+            .execute()
+        )
+
+        if not result.data:
+            raise Exception("Unable to get public profile data")
+
+        return result.data
+
+    def create_auth_user(self, username: str, email: str, password: str) -> str:
+        """
+        Function called to create a new user in the supabase database.
+
+        Returns:
+            user_id of created user.
+
+        """
+        client = self.__db_client.get_client()
+
+        response = client.auth.sign_up({
+            "email": email,
+            "password": password
+        })
+
+        if not response:
+            raise Exception("Failed to create user")
+
+        user_id = response.user.id
+
+        reuslt = client.table("public_profile").insert({
+            "user_id": user_id,
+            "username": username,
+            "bio": ""
+        }).execute()
+
+        if not result:
+            raise Exception("Failed to create public profile")
+
+        return user_id
+
+    def login(self, email: str, password: str):
+        client = self.__db_client.get_client()
+
+        response = client.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+
+        if not response.user:
+            raise Exception("Invalid email or password")
+
+        return response.user
+
+    def sign_out(self) -> bool:
+        client = self.__db_client.get_client()
+
+        response = client.auth.sign_out()
+
+        if response.error:
+            raise Exception("Failed to sign out")
+
+        return True
+
+    def forgot_password(self, email: str) -> bool:
+        client = self.__db_client.get_client()
+
+        response = client.auth.reset_password_for_email(
+            email,
+            {
+                "redirect_to": "http://localhost:3000/auth/reset-password"
+            }
+        )
+
+        if response.error:
+            raise Exception("Failed to send reset password email")
+
+        return True
+
+    def reset_password(self, new_password: str) -> bool:
+        client = self.__db_client.get_client()
+
+        response = client.auth.update_user({
+            "password": new_password
+        })
+
+        if response.error:
+            raise Exception("Failed to reset password")
+
+        return True
