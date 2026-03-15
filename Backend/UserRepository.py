@@ -110,3 +110,18 @@ class UserRepository:
             raise Exception("Failed to sign out")
 
         return True
+
+    def forgot_password(self, email: str):
+        client = self.__db_client.get_client()
+
+        response = client.auth.reset_password_for_email(
+            email,
+            {
+                "redirect_to": "http://localhost:3000/auth/reset-password"
+            }
+        )
+
+        if response.error:
+            raise Exception("Failed to send reset password email")
+
+        return True
