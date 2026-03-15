@@ -10,14 +10,15 @@ export function CreateAccount() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setErrorMessage("");
     setSuccessMessage("");
 
-    if (!username || !email || !password || !confirmPassword) {
+    if (!username.trim() || !email.trim() || !password || !confirmPassword) {
       setErrorMessage("Empty field(s). Please fill in all required information.");
       return;
     }
@@ -27,14 +28,39 @@ export function CreateAccount() {
       return;
     }
 
-    setSuccessMessage("Account form submitted successfully.");
+    try {
+      setIsLoading(true);
 
-    console.log({
-      username,
-      email,
-      password,
-      confirmPassword,
-    });
+      const response = await fetch("http://127.0.0.1:5000/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data.error || data.message || "Failed to create account.");
+        return;
+      }
+
+      setSuccessMessage("Account created successfully! Please verify email and sign in.");
+      setUsername("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      setErrorMessage("Unable to connect to the server.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -85,8 +111,8 @@ export function CreateAccount() {
           {errorMessage && <p className="auth-error">{errorMessage}</p>}
           {successMessage && <p className="auth-success">{successMessage}</p>}
 
-          <button className="auth-button" type="submit">
-            Get Started!
+          <button className="auth-button" type="submit" disabled={isLoading}>
+            {isLoading ? "Creating Account..." : "Get Started!"}
           </button>
         </form>
       </div>
