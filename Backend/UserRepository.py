@@ -125,6 +125,15 @@ class UserRepository:
         
         except Exception as e:
             raise Exception(f"Failed to send reset password email: {e}")
+        response = client.auth.reset_password_for_email(
+            email,
+            {
+                "redirect_to": "http://localhost:5173/auth/reset-password"
+            }
+        )
+
+        if response.error:
+            raise Exception("Failed to send reset password email")
 
 
     def reset_password(self, new_password: str) -> bool:
