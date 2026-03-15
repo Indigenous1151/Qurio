@@ -74,9 +74,7 @@ class AuthController:
         data: dict = request.get_json()
 
         try:
-            self.__service.forgot_password(
-                email=data['email']
-            )
+            self.__service.forgot_password(email=data['email'])
 
             return jsonify({
                 "Message": "Password reset email sent"
