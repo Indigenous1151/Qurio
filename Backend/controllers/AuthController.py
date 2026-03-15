@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from services.AuthService import AuthService
 from utils.HttpStatus import HttpStatus
 
-auth_bp = Blueprint('auth', __name__, routes='/auth')
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 class AuthController:
 
