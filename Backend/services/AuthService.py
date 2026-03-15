@@ -51,3 +51,6 @@ class AuthService:
 
     def forgot_password(self, email: str):
         return self.__repo.forgot_password(email)
+    
+    def reset_password(self, new_password: str):
+        return self.__repo.reset_password(new_password)
