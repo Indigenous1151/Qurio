@@ -1,31 +1,63 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
 import "../details/AuthForms.css";
 
 export function SignIn() {
-  const [emailOrUsername, setEmailOrUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setErrorMessage("");
     setSuccessMessage("");
 
-    if (!emailOrUsername.trim() || !password) {
+    if (!email.trim() || !password) {
       setErrorMessage("Please fill in all fields.");
       return;
     }
 
-    setSuccessMessage("Sign in form submitted successfully.");
+    try {
+      setIsLoading(true);
 
-    console.log({
-      emailOrUsername,
-      password,
-    });
+      const response = await fetch("http://127.0.0.1:5000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(data.error || data.message || "Failed to sign in.");
+        return;
+      }
+
+      setSuccessMessage("Successfully signed in!");
+
+      console.log("Login response:", data);
+
+      setTimeout(() => {
+        navigate("/");
+      }, 800);
+
+    } catch (error) {
+      setErrorMessage("Unable to connect to the server.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -44,9 +76,9 @@ export function SignIn() {
           <input
             className="auth-input"
             type="text"
-            placeholder="Username or Email"
-            value={emailOrUsername}
-            onChange={(event) => setEmailOrUsername(event.target.value)}
+            placeholder="Email Address"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
 
           <input
@@ -57,16 +89,15 @@ export function SignIn() {
             onChange={(event) => setPassword(event.target.value)}
           />
 
-          
           <Link to="/forgot-password" className="auth-link">
             Forgot Password?
           </Link>
-          
+
           {errorMessage && <p className="auth-error">{errorMessage}</p>}
           {successMessage && <p className="auth-success">{successMessage}</p>}
 
-          <button className="auth-button" type="submit">
-            Sign In
+          <button className="auth-button" type="submit" disabled={isLoading}>
+            {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
       </div>
