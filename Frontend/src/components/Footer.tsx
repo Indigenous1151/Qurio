@@ -6,9 +6,9 @@ export const Footer = () => {
   return (
     <div className = 'footer'>
       <div>
-        <div>
-            Contact us at 1-XXX-XXXX or email us at ____
-        </div>
+            Contact us!
+            <br></br>
+            Phone: 1-XXX-XXXX &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp; Email: qurio@gmail.com
       </div>
     </div>
   );
