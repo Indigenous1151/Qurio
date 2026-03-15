@@ -49,7 +49,8 @@ class AuthController:
 
             return jsonify({
                 "message": "Login Successful",
-                "user_id": user.get_user_id()
+                "user_id": user.get_personal_info().get_user_id(),
+                "username": user.get_public_info().get_username()
             }), HttpStatus.OK
         except KeyError as e:
             return jsonify({"error": f"Missing field {str(e)}"}), HttpStatus.BAD_REQUEST

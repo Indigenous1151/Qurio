@@ -26,7 +26,25 @@ class AuthService:
         return User(personal_info, public_info)
 
     def login(self, email: str, password: str) -> User:
-        pass
+        user = self.__repo.login(email, password)
+
+        user_id = user.id
+
+        personal = PersonalInformation(
+            user_id=user_id,
+            full_name=user.user_metadata.get("full_name", ""),
+            email=user.email
+        )
+
+        public_data = __repo.get_public_profile(user_id)
+
+        public_info = PublicInformation(
+            user_id=user_id,
+            username=public_data["username"],
+            bio=public_data["bio"]
+        )
+
+        return User(personal_info=personal, public_info=public)
 
     def signout(self):
         pass
