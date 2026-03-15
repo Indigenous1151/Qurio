@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
 import "../details/AuthForms.css";
+import { supabase } from '../supabaseClient/supabaseClient';
 
 export function SignIn() {
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export function SignIn() {
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setErrorMessage("");
@@ -44,8 +45,17 @@ export function SignIn() {
         return;
       }
 
-      setSuccessMessage("Successfully signed in!");
+      // set supabase session on frontend
+      const { error: supabaseError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
+      if (supabaseError) {
+        console.error("Supabase session error:", supabaseError);
+      }
+
+      setSuccessMessage("Successfully signed in!");
       console.log("Login response:", data);
 
       setTimeout(() => {

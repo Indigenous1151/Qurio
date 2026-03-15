@@ -8,10 +8,27 @@ class UserRepository:
     def __init__(self, db_client: SupabaseClient):
         self.__db_client = db_client
 
+    # def save_personal_info(self, personal_info: PersonalInformation) -> bool:
+    #     try:
+    #         client = self.__db_client.get_client()
+        
+    #         print(f"Updating user with id: {personal_info.get_user_id()}")
+    #         client.auth.admin.update_user_by_id(
+    #             personal_info.get_user_id(),
+    #             {"user_metadata": {"display_name": personal_info.get_full_name()},
+    #             "email": personal_info.get_email()}
+    #         )
+    #         return True
+    #     except Exception as e:
+    #         print(f"Error saving personal info: {e}")
+    #         raise e  # temporarily raise to see full error
+
     def save_personal_info(self, personal_info: PersonalInformation) -> bool:
         try:
-            client = self.__db_client.get_client()
-            print(f"Updating user with id: {personal_info.get_user_id()}")
+            from supabase import create_client
+            import os
+            # create fresh client every time
+            client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SECRET_KEY"))
             client.auth.admin.update_user_by_id(
                 personal_info.get_user_id(),
                 {"user_metadata": {"display_name": personal_info.get_full_name()},
@@ -19,8 +36,10 @@ class UserRepository:
             )
             return True
         except Exception as e:
-            print(f"Error saving personal info: {e}")
-            raise e  # temporarily raise to see full error
+            print(f"Full error: {type(e).__name__}: {e}")
+            return False
+
+
 
     def save_public_info(self, public_info: PublicInformation) -> bool:
         try:

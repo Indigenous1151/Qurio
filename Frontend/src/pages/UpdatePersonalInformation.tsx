@@ -22,7 +22,7 @@ export function UpdatePersonalInformation(){
         // const { data: { user } } = await supabase.auth.getUser();
 
         const { data: { user } } = await supabase.auth.getUser();
-        //console.log("Current user ID:", user?.id); -- remove later, just for testing
+        console.log("Current user ID:", user?.id); 
         if (!user) {
             console.error("No user logged in");
             return;
@@ -35,7 +35,7 @@ export function UpdatePersonalInformation(){
                 'X-User-Id': user.id
             },
             body: JSON.stringify({
-                full_name: name,
+                full_name: full_name,
                 email: email
             })
         });

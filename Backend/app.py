@@ -1,5 +1,7 @@
-from flask import Flask
 from dotenv import load_dotenv
+load_dotenv()
+from flask import Flask
+
 import os
 from flask_cors import CORS
 from database.SupabaseClient import SupabaseClient
@@ -9,7 +11,8 @@ from services.AuthService import AuthService
 from controllers.UserController import UserController, user_bp
 from controllers.AuthController import AuthController, auth_bp
 
-load_dotenv()
+
+
 
 app = Flask(__name__)
 CORS(app) 
@@ -18,6 +21,7 @@ supabase = SupabaseClient(
     url=os.getenv("SUPABASE_URL"),
     key=os.getenv("SUPABASE_SECRET_KEY")
 )
+print(f"Key: {os.getenv('SUPABASE_SECRET_KEY')[:30]}")
 supabase.connect()
 
 # Repository Creation
