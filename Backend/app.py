@@ -14,7 +14,7 @@ CORS(app)
 
 supabase = SupabaseClient(
     url=os.getenv("SUPABASE_URL"),
-    key=os.getenv("SUPABASE_SERVICE_KEY")
+    key=os.getenv("SUPABASE_SECRET_KEY")
 )
 supabase.connect()
 
