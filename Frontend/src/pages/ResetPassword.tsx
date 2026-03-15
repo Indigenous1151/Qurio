@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
+import { supabase } from "../client/supabase";
 import "../details/AuthForms.css";
 
 export function ResetPassword() {
@@ -12,7 +13,7 @@ export function ResetPassword() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setErrorMessage("");
@@ -31,18 +32,12 @@ export function ResetPassword() {
     try {
       setIsLoading(true);
 
-      const response = await fetch("http://127.0.0.1:5000/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password }),
+      const { error } = await supabase.auth.updateUser({
+        password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setErrorMessage(data.error || data.message || "Failed to reset password.");
+      if (error) {
+        setErrorMessage(error.message || "Failed to reset password.");
         return;
       }
 
@@ -52,8 +47,8 @@ export function ResetPassword() {
         navigate("/sign-in");
       }, 1200);
     } catch (error) {
-      setErrorMessage("Unable to connect to the server.");
-      console.error(error);
+      console.error("Reset password error:", error);
+      setErrorMessage("Unable to reset password.");
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +60,7 @@ export function ResetPassword() {
         <p className="auth-top-text">
           Back to{" "}
           <Link to="/sign-in" className="auth-link">
-            Sign In
+            Sign in
           </Link>
         </p>
 

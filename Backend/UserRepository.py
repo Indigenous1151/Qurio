@@ -114,26 +114,28 @@ class UserRepository:
     def forgot_password(self, email: str) -> bool:
         client = self.__db_client.get_client()
 
-        response = client.auth.reset_password_for_email(
-            email,
-            {
-                "redirect_to": "http://localhost:3000/auth/reset-password"
-            }
-        )
+        try:
+            client.auth.reset_password_for_email(
+                email,
+                {
+                    "redirect_to": "http://localhost:5173/reset-password"
+                }
+            )
+            return True
+        
+        except Exception as e:
+            raise Exception(f"Failed to send reset password email: {e}")
 
-        if response.error:
-            raise Exception("Failed to send reset password email")
-
-        return True
 
     def reset_password(self, new_password: str) -> bool:
         client = self.__db_client.get_client()
 
-        response = client.auth.update_user({
-            "password": new_password
-        })
-
-        if response.error:
+        try:
+            client.auth.update_user({
+                "password": new_password
+            }
+        )
+            return True
+        except Exception as e:
             raise Exception("Failed to reset password")
 
-        return True
