@@ -100,3 +100,13 @@ class UserRepository:
             raise Exception("Invalid email or password")
 
         return response.user
+
+    def sign_out(self) -> bool:
+        client = self.__db_client.get_client()
+
+        response = client.auth.sign_out()
+
+        if response.error:
+            raise Exception("Failed to sign out")
+
+        return True

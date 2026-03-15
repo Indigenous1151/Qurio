@@ -57,7 +57,7 @@ class AuthController:
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
-    def signout(self):
+    def sign_out(self):
         try:
             user_id = request.headers.get("X-User-Id")
 

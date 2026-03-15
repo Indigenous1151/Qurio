@@ -46,8 +46,8 @@ class AuthService:
 
         return User(personal_info=personal, public_info=public)
 
-    def signout(self):
-        pass
+    def sign_out(self):
+        return self.__repo.sign_out() # delegate responsibility to UserRepository
 
     def forgot_password(self, email: str):
         pass
