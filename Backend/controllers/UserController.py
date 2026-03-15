@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services.UserService import UserService
-from models.PersonalInformation import PersonalInformation
-from models.User import User
+from utils.HttpStatus import HttpStatus
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -12,17 +11,16 @@ class UserController:
         self.__register_routes()
 
     def __register_routes(self):
-       
+        # PUT routes
         user_bp.add_url_rule('/personal', 'update_personal', self.update_personal_information, methods=['PUT'])
-
-    
+        user_bp.add_url_rule('/profile',  'update_profile', self.update_public_profile, methods=['PUT'])
 
     def update_personal_information(self):
         data: dict = request.get_json()
         try:
             user_id = request.headers.get('X-User-Id')
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
             updated = self.__service.update_personal_information(
                 user_id=user_id,
@@ -34,8 +32,30 @@ class UserController:
                 "user_id": updated.get_user_id(),
                 "full_name": updated.get_full_name(),
                 "email": updated.get_email()
-            }), 200
+            }), HttpStatus.OK
         except KeyError as e:
-            return jsonify({"error": f"Missing field: {str(e)}"}), 400
+            return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+    def update_public_profile(self):
+        data: dict = request.get_json()
+        try:
+            user_id = request.headers.get('X-User-Id')
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            updated = self.__service.update_public_profile(
+                user_id=user_id,
+                username=data['username'],
+                bio=data.get('bio', '')
+            )
+            return jsonify({
+                "message": "Public profile updated successfully",
+                "username": updated.get_username(),
+                "bio": updated.get_bio()
+            }), HttpStatus.OK
+        except KeyError as e:
+            return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
