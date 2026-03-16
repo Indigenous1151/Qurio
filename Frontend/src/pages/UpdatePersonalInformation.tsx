@@ -54,8 +54,20 @@ export function UpdatePersonalInformation(){
 
   return(
   <div>
-    <Navbar></Navbar>
-      <h1 className = "update-info-title">Update Personal Information!</h1>
+    <Navbar/>
+      <h1 className = "update-info-title"></h1>
+       <div className="relative overflow-hidden">
+             
+        <div className="absolute top-[-80px] right-[-80px] w-64 md:w-96 h-64 md:h-96 rounded-full bg-[#638F77] opacity-10 pointer-events-none" />
+        <div className="absolute bottom-[-60px] left-[-60px] w-48 md:w-72 h-48 md:h-72 rounded-full bg-[#638F77] opacity-10 pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-10 text-center relative z-10">
+          <h1
+            className="text-4xl sm:text-5xl md:text-6xl font-black text-[#1a1a1a] leading-tight mb-4"
+            style={{ fontFamily: "'Georgia', serif", letterSpacing: '-0.02em' }}>
+            Update Personal Information <br />
+          </h1>
+          </div>
       <div className = "enter-info-box">
         <div className = "enter-info-small-box">
         <label>
@@ -68,7 +80,9 @@ export function UpdatePersonalInformation(){
           />
         </label>
         </div>
+     
         <div className = "enter-info-small-box">
+        <br></br>
         <label>
           Enter new email:
           <input
@@ -79,10 +93,13 @@ export function UpdatePersonalInformation(){
           />
         </label>
         </div>
+        <br></br>
+        <br></br>
         <button className = "update-button" onClick={handleSubmit}>Update Personal Information</button>
         <p>{message}</p>   
       </div>
-      <Footer></Footer>
+      <Footer/>
+    </div>
     </div>
     )
 }

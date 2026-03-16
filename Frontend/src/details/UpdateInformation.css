@@ -3,30 +3,48 @@
     font-size: 18px;
     border-radius: 10px;
     height: 400px;
+    width: 900px;
     display: flex;
     flex-direction: column; 
     justify-content: center;  
-    align-items: center;      
+    align-items: center;
+    margin: 0 auto; 
+    margin-top: 0px;       
 }
 
 .enter-info-small-box{
-    color: black;
+    color: white;
     height: 30px;
 }
 .update-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background-color: white;
+    color: #638F77;
+    font-weight: bold;
+    font-size: 0.875rem; 
+    padding: 0.625rem 1.25rem;
+    border-radius: 9999px;
     border: none;
-    color: black;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin-top: 20px;
-    cursor: pointer;
 }
 
 .update-info-title {
     margin-top: 0px;
     color: black;
+}
+
+input {
+  background-color: white;
+  border-radius: 8px;   /* rounded corners */
+  border: 1px solid gray;
+  padding: 5px 10px;
+  outline: none;
+  margin-left: 10px;
+  color: black;
+}
+
+label{
+    color: white;
+    font-size: 20px;
 }
