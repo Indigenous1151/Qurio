@@ -17,6 +17,8 @@ export const Navbar = () => {
                 <li><Link to="/create-account">Create Account</Link></li>
                 <li>|</li>
                 <li><Link to="/sign-in">Sign In</Link></li>
+                <li>|</li>
+                <li><Link to="/logout">Logout</Link></li>
             </ul>
         </div>
       </div>
