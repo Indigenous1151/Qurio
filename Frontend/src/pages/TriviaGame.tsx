@@ -45,6 +45,20 @@ useEffect(() => {
   fetchQuestions(); 
 }, []);
 
+const handleSkip = () => {
+if (answered) return;
+const newSkipped  = skipped +1 ;
+setSkipped(newSkipped);
+ if (current + 1 >= questions.length) {
+      navigate("/game/score", {
+        state: { score, total: questions.length, skipped: newSkipped, isDaily },
+      });
+    } else {
+      setCurrent((c) => c + 1);
+    }
+
+}
+
   
   useEffect(() => {
     if (questions.length > 0 && current < questions.length) {
