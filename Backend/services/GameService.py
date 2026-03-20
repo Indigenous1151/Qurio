@@ -28,6 +28,9 @@ class GameService:
     def submit_answer(self, game_id, answer):
         game = self.active_games.get(game_id)
         return game.submit_answer(answer)
+    
+    def skip_question(self, game):
+        game.skip_question(self)
 
 # for the hints
     # def use_hint(self, game_id):
@@ -45,7 +48,6 @@ class GameService:
             is_daily=game.is_daily,
             hints_used=0
         )
-
         self.game_repo.save(result)
         del self.active_games[game_id]
 
