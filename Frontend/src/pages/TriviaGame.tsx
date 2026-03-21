@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
+import { supabase } from "../client/supabase";
 import { useRef } from "react";
+
 
 interface Question {
   question: string;
@@ -101,33 +103,33 @@ setSkipped(newSkipped);
   const handleNext = () => {
   if (current + 1 >= questions.length) {
     
-   // uncomment when bakcend is ready
-    // const saveResult = async () => {
-    //   try {
-    //     const { data: { user } } = await supabase.auth.getUser();
-    //     if (user) {
-    //       await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
-    //         method: 'POST',
-    //         headers: {
-    //           'Content-Type': 'application/json',
-    //           'X-User-Id': user.id
-    //         },
-    //         body: JSON.stringify({
-    //           score: score,
-    //           total: questions.length,
-    //           skipped: skipped,
-    //           category: questions[0]?.category || "",
-    //           difficulty: difficulty || "any",
-    //           is_daily: isDaily
-    //         })
-    //       });
-    //     }
-    //   } catch (err) {
-    //     console.error("Failed to save result:", err);
-    //   }
-    // };
+   
+    const saveResult = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': user.id
+            },
+            body: JSON.stringify({
+              score: score,
+              total: questions.length,
+              skipped: skipped,
+              category: questions[0]?.category || "",
+              difficulty: difficulty || "any",
+              is_daily: isDaily
+            })
+          });
+        }
+      } catch (err) {
+        console.error("Failed to save result:", err);
+      }
+    };
 
-    // saveResult();
+    saveResult();
 
     navigate("/game/score", {
       state: { score, total: questions.length, skipped, isDaily },
