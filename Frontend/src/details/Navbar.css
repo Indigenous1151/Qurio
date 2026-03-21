@@ -1,28 +1,34 @@
+body {
+  margin: 0;
+  padding-top: 3px;
+}
+
 .header {
-    position: fixed;     
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     background: #638F77;
     padding: 15px 0;
+    z-index: 1000;
 }
 
 .header ul {
     list-style: none;
     display: flex;
-    justify-content: center; 
-    gap: 40px;               
+    justify-content: center;
+    gap: 40px;
     margin: 0;
     padding: 0;
-  
 }
 
 .header li {
     font-size: 18px;
+    color:white;
 }
 
 .header a {
     text-decoration: none;
-    color: black;
+    color: white;
     font-weight: 500;
 }

@@ -1,5 +1,6 @@
 from models.PersonalInformation import PersonalInformation
 from models.PublicInformation import PublicInformation
+from models.User import User
 from UserRepository import UserRepository
 
 

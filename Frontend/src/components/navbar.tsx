@@ -4,8 +4,7 @@ import '../details/Navbar.css';
 
 export const Navbar = () => {
   return (
-
- <div className = 'header'>
+    <div className = 'header'>
       <div>
         <div>
             <ul>
@@ -14,9 +13,15 @@ export const Navbar = () => {
                 <li><Link to="/UpdatePersonalInformation">Update Personal Information</Link></li>
                 <li>|</li>
                 <li><Link to="/UpdatePublicInformation">Update Public Information</Link></li>
+                <li>|</li>
+                <li><Link to="/create-account">Create Account</Link></li>
+                <li>|</li>
+                <li><Link to="/sign-in">Sign In</Link></li>
+                <li>|</li>
+                <li><Link to="/logout">Logout</Link></li>
             </ul>
         </div>
       </div>
     </div>
-   );
+  );
 };
