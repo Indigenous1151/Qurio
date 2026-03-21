@@ -31,12 +31,20 @@ class GameService:
     
     def skip_question(self, game):
         game.skip_question(self)
+    def save_result(self, user_id, score, total, skipped, category, difficulty, is_daily,hints_used):
+        from models.GameResult import GameResult
+        result = GameResult(
+            user=user_id,
+            score=score,
+            total_questions=total,
+            is_daily=is_daily,
+            hints_used=hints_used,
+            skipped= skipped
+        )
+        self.game_repo.save(result)
+        return result
 
-# for the hints
-    # def use_hint(self, game_id):
-    #     game = self.active_games.get(game_id)
-    #     hint = MultipleChoiceHint()
-    #     game.get_hint(hint)
+
 
     def end_game(self, game_id):
         game = self.active_games.get(game_id)
