@@ -2,6 +2,7 @@ from models.Game import Game
 from models.Question import Question
 from models.GameResult import GameResult
 
+
 class GameService:
     def __init__(self, question_repo, game_repo, trivia_service):
         self.question_repo = question_repo
@@ -32,7 +33,7 @@ class GameService:
     def skip_question(self, game):
         game.skip_question(self)
     def save_result(self, user_id, score, total, skipped, category, difficulty, is_daily,hints_used):
-        from models.GameResult import GameResult
+        
         result = GameResult(
             user=user_id,
             score=score,
