@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
+import { supabase } from "../client/supabase";
 import { useRef } from "react";
+
 
 interface Question {
   question: string;
@@ -26,7 +28,7 @@ function shuffleArray(arr: string[]) {
 export function TriviaGame() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { category, difficulty, count, isDaily } = location.state || {};
+  const { category, difficulty, count, isDaily } =location.state|| {};
 console.log("Game state:", location.state);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
@@ -44,6 +46,49 @@ useEffect(() => {
   hasFetched.current = true;
   fetchQuestions(); 
 }, []);
+
+
+const handleSkip = () => {
+  if (answered) return;
+  const newSkipped = skipped + 1;
+  setSkipped(newSkipped);
+  if (current + 1 >= questions.length) {
+    
+    //to save result when skipping last question
+    const saveResult = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': user.id
+            },
+            body: JSON.stringify({
+    score: score,
+    total: questions.length,
+    skipped: skipped,
+    hints_used: 0,  // should be updated when hints feature is implemented
+    category: questions[0]?.category || "",
+    difficulty: difficulty || "any",
+    is_daily: isDaily
+})
+          });
+        }
+      } catch (err) {
+        console.error("Failed to save result:", err);
+      }
+    };
+    saveResult();
+
+    navigate("/game/score", {
+      state: { score, total: questions.length, skipped: newSkipped, isDaily },
+    });
+  } else {
+    setCurrent((c) => c + 1);
+  }
+};
 
   
   useEffect(() => {
@@ -85,35 +130,44 @@ useEffect(() => {
   };
 
   const handleNext = () => {
-  if (current + 1 >= questions.length) {
-    
-   // uncomment when bakcend is ready
-    // const saveResult = async () => {
-    //   try {
-    //     const { data: { user } } = await supabase.auth.getUser();
-    //     if (user) {
-    //       await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
-    //         method: 'POST',
-    //         headers: {
-    //           'Content-Type': 'application/json',
-    //           'X-User-Id': user.id
-    //         },
-    //         body: JSON.stringify({
-    //           score: score,
-    //           total: questions.length,
-    //           skipped: skipped,
-    //           category: questions[0]?.category || "",
-    //           difficulty: difficulty || "any",
-    //           is_daily: isDaily
-    //         })
-    //       });
-    //     }
-    //   } catch (err) {
-    //     console.error("Failed to save result:", err);
-    //   }
-    // };
+    console.log("handleNext called, current:", current, "total:", questions.length);
+    if (current + 1 >= questions.length) {
+    console.log("Game over, saving result...");
+    const saveResult = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("User:", user);
 
-    // saveResult();
+
+  
+    
+   
+    
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log("User in saveResult:", user);
+        if (user) {
+          await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': user.id
+            },
+            body: JSON.stringify({
+              score: score,
+              total: questions.length,
+              skipped: skipped,
+              category: questions[0]?.category || "",
+              difficulty: difficulty || "any",
+              is_daily: isDaily
+            })
+          });
+        }
+      } catch (err) {
+        console.error("Failed to save result:", err);
+      }
+    };
+
+    saveResult();
 
     navigate("/game/score", {
       state: { score, total: questions.length, skipped, isDaily },
@@ -202,8 +256,8 @@ useEffect(() => {
             {options.map((opt, i) => {
               let cls = "w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2 transition-all cursor-pointer border-none ";
               if (!answered) {
-                cls += "bg-white text-[#1a1a1a] hover:bg-gray-100";
-              } else if (opt === q.correct_answer) {
+                cls+= "bg-white text-[#1a1a1a] hover:bg-gray-100";
+              } else if(opt === q.correct_answer) {
                 cls += "bg-green-100 text-green-800 border-2 border-green-500";
               } else if (opt === selected) {
                 cls += "bg-red-100 text-red-800 border-2 border-red-400";
@@ -220,18 +274,20 @@ useEffect(() => {
           </div>
 
           
-          <div className="flex justify-end gap-3 mt-1">
-            
+         <div className="flex justify-end gap-3 mt-1">
+            {!answered && (<button
+                onClick={handleSkip}
+                className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
+              >Skip </button>
+            )}
             {answered && (
               <button
                 onClick={handleNext}
                 className="px-6 py-2 rounded-lg text-sm font-bold bg-white text-[#638F77] hover:bg-gray-100 cursor-pointer border-none"
-              >
-                {current + 1 >= questions.length ? "See Results →" : "Next →"}
+              >{current + 1 >= questions.length ? "See Results" : "Next"}
               </button>
             )}
           </div>
-
         </div>
       </div>
       <Footer />
