@@ -216,8 +216,8 @@ setSkipped(newSkipped);
             {options.map((opt, i) => {
               let cls = "w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2 transition-all cursor-pointer border-none ";
               if (!answered) {
-                cls += "bg-white text-[#1a1a1a] hover:bg-gray-100";
-              } else if (opt === q.correct_answer) {
+                cls+= "bg-white text-[#1a1a1a] hover:bg-gray-100";
+              } else if(opt === q.correct_answer) {
                 cls += "bg-green-100 text-green-800 border-2 border-green-500";
               } else if (opt === selected) {
                 cls += "bg-red-100 text-red-800 border-2 border-red-400";
@@ -234,18 +234,20 @@ setSkipped(newSkipped);
           </div>
 
           
-          <div className="flex justify-end gap-3 mt-1">
-            
+         <div className="flex justify-end gap-3 mt-1">
+            {!answered && (<button
+                onClick={handleSkip}
+                className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
+              >Skip </button>
+            )}
             {answered && (
               <button
                 onClick={handleNext}
                 className="px-6 py-2 rounded-lg text-sm font-bold bg-white text-[#638F77] hover:bg-gray-100 cursor-pointer border-none"
-              >
-                {current + 1 >= questions.length ? "See Results →" : "Next →"}
+              >{current + 1 >= questions.length ? "See Results" : "Next"}
               </button>
             )}
           </div>
-
         </div>
       </div>
       <Footer />
