@@ -1,24 +1,24 @@
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-from env import MONGO_URI 
+import os
 
-uri = MONGO_URI
+class MongoDBClient:
+    def __init__(self):
+        self.__uri = os.getenv("MONGO_URI")
+        self.__client = None
+        self.__db = None
 
-# Create a MongoClient with Server API options
-client = MongoClient(
-    uri,
-    server_api=ServerApi(
-        version="1",
-        strict=True,
-        deprecation_errors=True
-    )
-)
+    def connect(self):
+        self.__client = MongoClient(
+            self.__uri,
+            server_api=ServerApi(version="1", strict=True, deprecation_errors=True)
+        )
+        self.__db = self.__client["qurioquestions"]
+        print("Connected to MongoDB!")
 
-def run():
-    try:
-        # Connect to the server
-        client.admin.command("ping")
-        print("Pinged your deployment. You successfully connected to MongoDB!")
-    finally:
-        # Close the connection
-        client.close()
+    def get_collection(self, name: str):
+        return self.__db[name]
+
+    def disconnect(self):
+        if self.__client:
+            self.__client.close()
