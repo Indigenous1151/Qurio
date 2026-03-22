@@ -13,6 +13,7 @@ import { SignIn } from './pages/SignIn'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Logout } from './pages/Logout'
+import { PersonalStatistics } from './pages/PersonalStatistics'
 
 function App() {
  
@@ -32,6 +33,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path= "/Logout" element={<Logout/>} />
+        <Route path= "/personal-statistics" element={<PersonalStatistics/>} />
       </Routes>
     </Router>
     
