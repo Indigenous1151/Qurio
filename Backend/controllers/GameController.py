@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from utils.HttpStatus import HttpStatus
 
 game_bp = Blueprint('game', __name__, url_prefix='/game')
 
@@ -19,45 +20,45 @@ class GameController:
         try:
             user_id = request.headers.get('X-User-Id')
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             game = self.service.create_classic_game(user_id)
             return jsonify({
                 "game_id": game.game_id,
                 "total_questions": len(game.questions),
                 "is_daily": game.is_daily
-            }), 200
+            }), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def start_daily_game(self):
         try:
             user_id = request.headers.get('X-User-Id')
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             game = self.service.create_daily_game(user_id)
             return jsonify({
                 "game_id": game.game_id,
                 "total_questions": len(game.questions),
                 "is_daily": game.is_daily
-            }), 200
+            }), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def submit_answer(self):
         try:
             data = request.get_json()
             correct = self.service.submit_answer(data['game_id'], data['answer'])
-            return jsonify({"correct": correct}), 200
+            return jsonify({"correct": correct}), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def skip_question(self):
         try:
             data = request.get_json()
             self.service.skip_question(data['game_id'])
-            return jsonify({"message": "Question skipped"}), 200
+            return jsonify({"message": "Question skipped"}), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def end_game(self):
         try:
@@ -68,9 +69,9 @@ class GameController:
                 "total_questions": result.total_questions,
                 "date_played": result.date_played,
                 "is_daily": result.is_daily
-            }), 200
+            }), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     
     def save_result(self):
@@ -79,7 +80,7 @@ class GameController:
             print("save_result called!2")
             user_id = request.headers.get('X-User-Id')
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             data = request.get_json()
             self.service.save_result(
                 user_id=user_id,
@@ -91,7 +92,7 @@ class GameController:
                 difficulty=data.get('difficulty', 'any'),
                 is_daily=data.get('is_daily', False)
             )
-            return jsonify({"message": "Result saved"}), 200
+            return jsonify({"message": "Result saved"}), HttpStatus.OK
         except Exception as e:
             print(f"Error: {type(e).__name__}: {e}")
             raise e  
