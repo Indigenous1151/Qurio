@@ -18,6 +18,8 @@ export const Navbar = () => {
                 <li>|</li>
                 <li><Link to="/sign-in">Sign In</Link></li>
                 <li>|</li>
+                <li><Link to="/personal-statistics">PersonalStatistics</Link></li>
+                <li>|</li>
                 <li><Link to="/logout">Logout</Link></li>
             </ul>
         </div>
