@@ -274,18 +274,32 @@ const handleSkip = () => {
           </div>
 
           
-         <div className="flex justify-end gap-3 mt-1">
-            {!answered && (<button
-                onClick={handleSkip}
-                className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
-              >Skip </button>
-            )}
-            {answered && (
-              <button
-                onClick={handleNext}
-                className="px-6 py-2 rounded-lg text-sm font-bold bg-white text-[#638F77] hover:bg-gray-100 cursor-pointer border-none"
-              >{current + 1 >= questions.length ? "See Results" : "Next"}
-              </button>
+          <div className="flex justify-between items-center mt-1">
+            {!answered ? (
+              <>
+                <button
+                  onClick={() => console.log("Hint clicked")} //TODO: update with hint logic once implemented
+                  className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
+                >
+                  Hint
+                </button>
+
+                <button
+                  onClick={handleSkip}
+                  className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
+                >
+                  Skip
+                </button>
+              </>
+            ) : (
+              <div className="ml-auto">
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-2 rounded-lg text-sm font-bold bg-white text-[#638F77] hover:bg-gray-100 cursor-pointer border-none"
+                >
+                  {current + 1 >= questions.length ? "See Results" : "Next"}
+                </button>
+              </div>
             )}
           </div>
         </div>
