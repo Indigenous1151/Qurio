@@ -1,6 +1,7 @@
 from models.Game import Game
 from models.Question import Question
 from models.GameResult import GameResult
+from models.MultipleChoiceHint import MultipleChoiceHint
 
 
 class GameService:
@@ -32,6 +33,7 @@ class GameService:
     
     def skip_question(self, game):
         game.skip_question(self)
+
     def save_result(self, user_id, score, total, skipped, category, difficulty, is_daily,hints_used):
         
         result = GameResult(
@@ -45,7 +47,11 @@ class GameService:
         self.game_repo.save(result)
         return result
 
-
+    def get_hint(self, game_id):
+        game: Game = self.active_games.get(game_id)
+        hint = MultipleChoiceHint()
+        game.get_hint(hint)
+        return game.questions[game.current_index]
 
     def end_game(self, game_id):
         game = self.active_games.get(game_id)
@@ -55,7 +61,7 @@ class GameService:
             score=game.get_score(),
             total_questions=len(game.questions),
             is_daily=game.is_daily,
-            hints_used=0
+            hints_used=game.hints_used
         )
         self.game_repo.save(result)
         del self.active_games[game_id]

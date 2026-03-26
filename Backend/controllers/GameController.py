@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify
 from utils.HttpStatus import HttpStatus
+from services.GameService import GameService
 
 game_bp = Blueprint('game', __name__, url_prefix='/game')
 
 class GameController:
-    def __init__(self, game_service):
-        self.service = game_service
+    def __init__(self, game_service: GameService):
+        self.service: GameService = game_service
         self.__register_routes()
 
     def __register_routes(self):
@@ -15,6 +16,7 @@ class GameController:
         game_bp.add_url_rule('/skip', 'skip_question', self.skip_question, methods=['POST'])
         game_bp.add_url_rule('/end', 'end_game', self.end_game, methods=['POST'])
         game_bp.add_url_rule('/result', 'save_result', self.save_result, methods=['POST'])
+        game_bp.add_url_rule('/hint', 'get_hint', self.get_hint, methods=['POST'])
 
     def start_classic_game(self):
         try:
@@ -73,7 +75,16 @@ class GameController:
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
-    
+    def get_hint(self):
+        try:
+            data = request.get_json()
+            game_id = data['game_id']
+            updated_question = self.service.get_hint(game_id)
+            # send back the updated_question for use in front end
+            return jsonify(updated_question.to_dict()), HttpStatus.OK
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
     def save_result(self):
         print("save_result called!")
         try:
