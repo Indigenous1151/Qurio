@@ -10,6 +10,7 @@ interface Question {
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
+  removed_answers: string[];
   type: string;
   difficulty: string;
   category: string;
@@ -39,8 +40,9 @@ console.log("Game state:", location.state);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [answered, setAnswered] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(0);
 
-  const hasFetched = useRef(false); 
+  const hasFetched = useRef(false);
 useEffect(() => { 
   if (hasFetched.current) return;
   hasFetched.current = true;
@@ -129,6 +131,39 @@ const handleSkip = () => {
     }
   };
 
+const handleHint = async () => {
+  // check if hint is necessary
+  if (answered || current >= questions.length) return;
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/game/hint`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': user.id,
+      },
+      body: JSON.stringify({ game_id: /* from backend state */})
+    });
+
+    if (!res.ok) throw new Error('Hint failed');
+    const q = await res.json(); // updated question from backend
+    setHintsUsed((h) => h + 1);
+
+    setQuestions((prev) => 
+      prev.map((item, idx) => (idx === current ? q : item))
+    );
+
+    const availableIncorrect = q.incorrect_answers.filter(
+      (opt) => !q.removed_answers.includes(opt)
+    );
+    setOptions(shuffleArray([q.correct_answer, ...availableIncorrect]));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   const handleNext = () => {
     console.log("handleNext called, current:", current, "total:", questions.length);
     if (current + 1 >= questions.length) {
@@ -158,7 +193,8 @@ const handleSkip = () => {
               skipped: skipped,
               category: questions[0]?.category || "",
               difficulty: difficulty || "any",
-              is_daily: isDaily
+              is_daily: isDaily,
+              hints_used: hintsUsed
             })
           });
         }
