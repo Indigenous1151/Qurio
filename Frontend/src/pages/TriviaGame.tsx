@@ -71,7 +71,7 @@ const handleSkip = () => {
     score: score,
     total: questions.length,
     skipped: skipped,
-    hints_used: 0,  // should be updated when hints feature is implemented
+    hints_used: hintsUsed,
     category: questions[0]?.category || "",
     difficulty: difficulty || "any",
     is_daily: isDaily
@@ -314,7 +314,7 @@ const handleHint = async () => {
             {!answered ? (
               <>
                 <button
-                  onClick={() => console.log("Hint clicked")} //TODO: update with hint logic once implemented
+                  onClick={handleHint} //TODO: update with hint logic once implemented
                   className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
                 >
                   Hint
