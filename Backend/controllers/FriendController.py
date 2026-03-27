@@ -13,6 +13,7 @@ class FriendController:
         friend_bp.add_url_rule('/accept-email', 'accept_email', self.accept_from_email, methods=['GET'])
         friend_bp.add_url_rule('/decline-email', 'decline_email', self.decline_from_email, methods=['GET'])
         friend_bp.add_url_rule('/search', 'search_user', self.search_user, methods=['GET'])
+        friend_bp.add_url_rule('/list', 'get_friends', self.get_friends_list, methods=['GET'])
 
     def accept_from_email(self):
         try:
@@ -92,5 +93,14 @@ class FriendController:
             search_type = request.args.get('type', 'username')
             results = self.__service.search_user(query, search_type)
             return jsonify({"results": results}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    def get_friends_list(self):
+        try:
+            user_id = request.headers.get('X-User-Id')
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), 401
+            friends = self.__service.get_friends_list(user_id)
+            return jsonify({"friends": friends}), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500

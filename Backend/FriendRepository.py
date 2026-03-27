@@ -37,7 +37,7 @@ class FriendRepository:
             return result.data
         except Exception as e:
             print(f"Error getting friends: {e}")
-            return []
+            raise e  
 
     def get_pending_requests(self, user_id: str) -> list:
         try:

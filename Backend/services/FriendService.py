@@ -37,6 +37,8 @@ class FriendService:
 
             except Exception as e:
                 print(f"Email notification failed: {e}")
+    def get_friends_list(self, user_id: str) -> list:
+        return self.__friend_repo.get_friends_list(user_id)
             
             
 
