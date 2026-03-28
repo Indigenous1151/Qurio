@@ -37,9 +37,11 @@ class FriendService:
 
             except Exception as e:
                 print(f"Email notification failed: {e}")
+            return saved
     def get_friends_list(self, user_id: str) -> list:
         return self.__friend_repo.get_friends_list(user_id)
             
-            
+    def remove_friend(self, user_id: str, friend_id: str) -> bool:
+        return self.__friend_repo.delete_friendship(user_id, friend_id)
 
-        return saved
+        

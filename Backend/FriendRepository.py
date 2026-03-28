@@ -49,3 +49,14 @@ class FriendRepository:
         except Exception as e:
             print(f"Error getting pending requests: {e}")
             return []
+    def delete_friendship(self, user_id: str, friend_id: str) -> bool:
+        try:
+            client = self.__db_client.get_client()
+            client.table("friend_requests").delete().or_(
+                f"and(sender_id.eq.{user_id},receiver_id.eq.{friend_id}),"
+                f"and(sender_id.eq.{friend_id},receiver_id.eq.{user_id})"
+            ).execute()
+            return True
+        except Exception as e:
+            print(f"Error removing friend: {e}")
+            return False
