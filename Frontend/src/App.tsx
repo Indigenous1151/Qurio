@@ -1,6 +1,6 @@
 
 import './App.css'
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom' 
+import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom' 
 import { Home } from './pages/Home'
 import { UpdatePersonalInformation } from './pages/UpdatePersonalInformation'
 import { UpdatePublicInformation } from './pages/UpdatePublicInformation'
@@ -14,6 +14,8 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Logout } from './pages/Logout'
 import { PersonalStatistics } from './pages/PersonalStatistics'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { PublicOnlyRoute } from './components/PublicOnlyRoute'
 
 function App() {
  
@@ -21,19 +23,29 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home/>} />
-        <Route path="/UpdatePersonalInformation" element={<UpdatePersonalInformation/>} />
-        <Route path="/UpdatePublicInformation" element={<UpdatePublicInformation/>} />
-        <Route path="/game/setup" element={<ClassicGame />} />
-        <Route path="/game/play" element={<TriviaGame />} />
-        <Route path="/game/score" element={<ResultScreen />} />
-        <Route path="/game/daily" element={<DailyGame />} />
-        <Route path="/create-account" element={<CreateAccount />} />
-        <Route path="/sign-in" element={<SignIn />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path= "/Logout" element={<Logout/>} />
-        <Route path= "/personal-statistics" element={<PersonalStatistics/>} />
+        {/* Public-only routes */}
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/create-account" element={<CreateAccount />} />
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+        </Route>
+
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Home/>} />
+          <Route path="/UpdatePersonalInformation" element={<UpdatePersonalInformation/>} />
+          <Route path="/UpdatePublicInformation" element={<UpdatePublicInformation/>} />
+          <Route path="/game/setup" element={<ClassicGame />} />
+          <Route path="/game/play" element={<TriviaGame />} />
+          <Route path="/game/score" element={<ResultScreen />} />
+          <Route path="/game/daily" element={<DailyGame />} />
+          <Route path= "/Logout" element={<Logout/>} />
+          <Route path= "/personal-statistics" element={<PersonalStatistics/>} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/sign-in" replace />} />
+
       </Routes>
     </Router>
     
