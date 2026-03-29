@@ -53,7 +53,7 @@ class UserRepository:
         except Exception as e:
             print(f"Error saving public info: {e}")
             return False
-
+    
     def get_public_profile(self, user_id: str) -> dict:
         """
         Function to query database and get row matching user_id.
@@ -166,4 +166,37 @@ class UserRepository:
             return True
         except Exception as e:
             raise Exception("Failed to reset password")
+    # adding here to follow the information expert principle
+    def search_by_username(self, username: str) -> list:
+        try:
+            client = self.__db_client.get_client()
+            result = client.table("public_profile").select("*").ilike(
+                "username", f"%{username}%"
+            ).execute()
+            return result.data
+        except Exception as e:
+            print(f"Error searching by username: {e}")
+            return []
+    
+    def search_by_username_exact(self, user_id: str) -> dict:
+        try:
+            client = self.__db_client.get_client()
+            result = client.table("public_profile").select("*").eq(
+                "user_id", user_id
+            ).single().execute()
+            return result.data
+        except Exception as e:
+            print(f"Error getting profile: {e}")
+            return {}
+
+    def search_by_email(self, email: str) -> list:
+        try:
+            client = self.__db_client.get_client()
+            result = client.table("public_profile").select("*").ilike(
+                "email", f"%{email}%"
+            ).execute()
+            return result.data
+        except Exception as e:
+            print(f"Error searching by email: {e}")
+            return []
 
