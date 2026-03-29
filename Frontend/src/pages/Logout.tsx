@@ -10,7 +10,7 @@ export function Logout() {
   useEffect(() => {
     const logout = async () => {
       try {
-        await fetch("http://127.0.0.1:5000/auth/logout", {
+        await fetch("http://127.0.0.1:5000/auth/signout", {
           method: "POST",
           credentials: "include",
         });

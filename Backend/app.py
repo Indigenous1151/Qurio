@@ -20,7 +20,7 @@ from controllers.GameController import GameController, game_bp
 
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 
 supabase = SupabaseClient(
     url=os.getenv("SUPABASE_URL"),

@@ -14,10 +14,6 @@ export const Navbar = () => {
                 <li>|</li>
                 <li><Link to="/UpdatePublicInformation">Update Public Information</Link></li>
                 <li>|</li>
-                <li><Link to="/create-account">Create Account</Link></li>
-                <li>|</li>
-                <li><Link to="/sign-in">Sign In</Link></li>
-                <li>|</li>
                 <li><Link to="/personal-statistics">PersonalStatistics</Link></li>
                 <li>|</li>
                 <li><Link to="/logout">Logout</Link></li>
