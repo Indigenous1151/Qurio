@@ -41,9 +41,10 @@ console.log("Game state:", location.state);
   const [error, setError] = useState("");
   const [answered, setAnswered] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [gameId, setGameId] = useState<string | null>(null);
 
   const hasFetched = useRef(false);
-useEffect(() => { 
+useEffect(() => {
   if (hasFetched.current) return;
   hasFetched.current = true;
   fetchQuestions(); 
@@ -132,23 +133,32 @@ const handleSkip = () => {
   };
 
 const handleHint = async () => {
+  console.log("DEBUG: In handleHint")
   // check if hint is necessary
-  if (answered || current >= questions.length) return;
-
+  if (answered || current >= questions.length)
+  {
+    console.log("DEBUG: gameID=" + gameId + " answered=" + answered + " current=" + current + " questions.length=" + questions.length);
+    return;
+  }
+  console.log("DEBUG: debug is necessary")
   try {
     const { data: { user } } = await supabase.auth.getUser();
+    console.log("before user");
     if (!user) return;
+    console.log("not user passed");
     const res = await fetch(`${import.meta.env.VITE_API_URL}/game/hint`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-User-Id': user.id,
       },
-      body: JSON.stringify({ game_id: /* from backend state */})
+      body: JSON.stringify({ game_id: gameId })
     });
 
     if (!res.ok) throw new Error('Hint failed');
     const q = await res.json(); // updated question from backend
+    console.log("HINT RESPONSE:", q);
+    console.log("Removed answers:", q.removed_answers);
     setHintsUsed((h) => h + 1);
 
     setQuestions((prev) => 
@@ -158,6 +168,8 @@ const handleHint = async () => {
     const availableIncorrect = q.incorrect_answers.filter(
       (opt) => !q.removed_answers.includes(opt)
     );
+
+    console.log("AvailableIncorrect" + availableIncorrect);
     setOptions(shuffleArray([q.correct_answer, ...availableIncorrect]));
   } catch (err) {
     console.error(err);
@@ -314,7 +326,8 @@ const handleHint = async () => {
             {!answered ? (
               <>
                 <button
-                  onClick={handleHint} //TODO: update with hint logic once implemented
+                  onClick={handleHint}
+                  disabled={answered}
                   className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
                 >
                   Hint
