@@ -69,14 +69,14 @@ const handleSkip = () => {
               'X-User-Id': user.id
             },
             body: JSON.stringify({
-    score: score,
-    total: questions.length,
-    skipped: skipped,
-    hints_used: hintsUsed,
-    category: questions[0]?.category || "",
-    difficulty: difficulty || "any",
-    is_daily: isDaily
-})
+              score: score,
+              total: questions.length,
+              skipped: skipped,
+              hints_used: hintsUsed,
+              category: questions[0]?.category || "",
+              difficulty: difficulty || "any",
+              is_daily: isDaily
+            })
           });
         }
       } catch (err) {
