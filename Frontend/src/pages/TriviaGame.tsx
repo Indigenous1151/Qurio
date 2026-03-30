@@ -31,22 +31,23 @@ export function TriviaGame() {
   const navigate = useNavigate();
   const { category, difficulty, count, isDaily } =location.state|| {};
   console.log("Game state:", location.state);
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [totalQuestions, setTotalQuestions] = useState(0);
-  const [options, setOptions] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
-  const [skipped, setSkipped] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [answered, setAnswered] = useState(false);
-  const [hintsUsed, setHintsUsed] = useState(0);
-  const [gameId, setGameId] = useState<string | null>(null);
+  const [gameState, setGameState] = useState<null | {
+    gameId: string;
+    currentQuestion: Question;
+    currentIndex: number;
+    score: number;
+    skipped: number;
+    hintsUsed: number;
+    totalQuestions: number;
+    options: string[];
+  }>(null);
 
   const hasFetched = useRef(false);
 const continueGame = async (existingGameId: string) => {
-  console.log('continueGame called with existingGameId:', existingGameId);
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return;
@@ -61,7 +62,6 @@ const continueGame = async (existingGameId: string) => {
     });
 
     if (!res.ok) {
-      console.log('Continue game failed, starting new game');
       sessionStorage.removeItem('activeGameId');
       startGame();
       return;
@@ -73,18 +73,26 @@ const continueGame = async (existingGameId: string) => {
       return;
     }
 
-    setGameId(data.game_id);
-    sessionStorage.setItem('activeGameId', data.game_id);
-    setCurrentQuestion(data.question);
-    setCurrentIndex(data.current_index);
-    setScore(data.score);
-    setSkipped(data.skipped);
-    setHintsUsed(data.hints_used);
-    setTotalQuestions(data.total_questions);
     const availableIncorrect = data.question.incorrect_answers.filter(
       (opt: string) => !data.question.removed_answers.includes(opt)
     );
-    setOptions(shuffleArray([data.question.correct_answer, ...availableIncorrect]));
+
+    const game = {
+      gameId: data.game_id,
+      currentQuestion: data.question,
+      currentIndex: data.current_index,
+      score: data.score,
+      skipped: data.skipped,
+      hintsUsed: data.hints_used,
+      totalQuestions: data.total_questions,
+      options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
+    };
+
+    setGameState(game);
+    setLoading(false);
+    setSelected(null);
+    setAnswered(false);
+    sessionStorage.setItem('activeGameId', data.game_id);
 
   } catch (err) {
     console.error('Error in continueGame:', err);
@@ -95,21 +103,30 @@ const continueGame = async (existingGameId: string) => {
 useEffect(() => {
   if (hasFetched.current) return;
   hasFetched.current = true;
-  const existingGameId = sessionStorage.getItem('activeGameId');
-  console.log('On mount - existingGameId:', existingGameId, 'location.state:', location.state);
-  if (existingGameId && !location.state) {
-    // Only resume if no new game state provided
-    console.log('Resuming existing game from sessionStorage', existingGameId);
-    continueGame(existingGameId);
-  } else {
-    // If new game state provided or no existing game, start new game
-    if (existingGameId) {
-      console.log('Ending existing game before starting new one');
-      // Optionally end the existing game here, but for now just clear sessionStorage
-      sessionStorage.removeItem('activeGameId');
+
+  const checkServerForActiveGame = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return startGame();
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/game/active`, {
+      headers: {
+        "Authorization": `Bearer ${session.access_token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (data.active && !location.state) {
+      console.log("Found active game on server: ", data.game_id);
+      continueGame(data.game_id);
+    } else {
+      console.log("No active game found, starting new game");
+      startGame();
     }
-    startGame();
-  }
+  };
+
+  checkServerForActiveGame();
+
   // Clear the location state after using it to prevent it from persisting on refresh
   if (location.state) {
     window.history.replaceState(null, '', window.location.pathname);
@@ -118,7 +135,7 @@ useEffect(() => {
 
 
 const handleSkip = async () => {
-  if (answered || !gameId) return;
+  if (answered || !gameState) return;
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return;
@@ -128,11 +145,11 @@ const handleSkip = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`
       },
-      body: JSON.stringify({ game_id: gameId })
+      body: JSON.stringify({ game_id: gameState.gameId })
     });
     if (!res.ok) throw new Error('Skip failed');
     const skipData = await res.json();
-    setSkipped(skipData.skipped);
+    setGameState(prev => prev ? { ...prev, skipped: skipData.skipped } : null);
     await fetchCurrentQuestion();
   } catch (err) {
     console.error(err);
@@ -141,21 +158,17 @@ const handleSkip = async () => {
 
   
   useEffect(() => {
-    if (currentQuestion) {
-      const availableIncorrect = currentQuestion.incorrect_answers.filter(
-        (opt) => !currentQuestion.removed_answers.includes(opt)
-      );
-      setOptions(shuffleArray([currentQuestion.correct_answer, ...availableIncorrect]));
+    if (gameState) {
       setSelected(null);
       setAnswered(false);
     }
-  }, [currentQuestion]);
+  }, [gameState?.currentIndex]);
 
   useEffect(() => {
-    if (gameId) {
+    if (gameState?.gameId) {
       fetchCurrentQuestion();
     }
-  }, [gameId]);
+  }, [gameState?.gameId]);
 
   const startGame = async () => {
     console.log("Starting game...");
@@ -188,19 +201,23 @@ const handleSkip = async () => {
       const data = await res.json();
 
       console.log("Start game data:", data);
-      setGameId(data.game_id);
       sessionStorage.setItem('activeGameId', data.game_id);
       console.log("Game ID set to:", data.game_id);
-      setCurrentQuestion(data.question);
-      setCurrentIndex(data.current_index);
-      setScore(data.score);
-      setSkipped(data.skipped);
-      setHintsUsed(data.hints_used);
-      setTotalQuestions(data.total_questions);
       const availableIncorrect = data.question.incorrect_answers.filter(
         (opt: string) => !data.question.removed_answers.includes(opt)
       );
-      setOptions(shuffleArray([data.question.correct_answer, ...availableIncorrect]));
+      setGameState({
+        gameId: data.game_id,
+        currentQuestion: data.question,
+        currentIndex: data.current_index,
+        score: data.score,
+        skipped: data.skipped,
+        hintsUsed: data.hints_used,
+        totalQuestions: data.total_questions,
+        options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
+      });
+      setSelected(null);
+      setAnswered(false);
     } catch (err) {
       console.error("Error in startGame:", err);
       setError("Failed to start game.");
@@ -210,10 +227,9 @@ const handleSkip = async () => {
   };
 
   const fetchCurrentQuestion = async (overrideGameId?: string) => {
-    const activeId = overrideGameId || gameId;
+    const activeId = overrideGameId || gameState?.gameId;
     console.log("Fetching current question, gameId:", activeId);
     if (!activeId) return;
-    setGameId(activeId);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
@@ -234,17 +250,18 @@ const handleSkip = async () => {
         await endGame();
         return;
       }
-      setCurrentQuestion(data.question);
-      setCurrentIndex(data.current_index);
-      setScore(data.score);
-      setSkipped(data.skipped);
-      setHintsUsed(data.hints_used);
       const availableIncorrect = data.question.incorrect_answers.filter(
         (opt: string) => !data.question.removed_answers.includes(opt)
       );
-      setOptions(shuffleArray([data.question.correct_answer, ...availableIncorrect]));
-      setSelected(null);
-      setAnswered(false);
+      setGameState(prev => prev ? {
+        ...prev,
+        currentQuestion: data.question,
+        currentIndex: data.current_index,
+        score: data.score,
+        skipped: data.skipped,
+        hintsUsed: data.hints_used,
+        options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
+      } : null);
     } catch (err) {
       console.error("Error in fetchCurrentQuestion:", err);
       setError("Failed to fetch question.");
@@ -252,20 +269,23 @@ const handleSkip = async () => {
   };
 
   const endGame = async () => {
-    if (!gameId) return;
+    if (!gameState) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/game/end`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ game_id: gameId })
+        body: JSON.stringify({ game_id: gameState.gameId })
       });
+
       if (!res.ok) throw new Error('End game failed');
       const result = await res.json();
+
       // Now save result
       await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
         method: 'POST',
@@ -276,16 +296,20 @@ const handleSkip = async () => {
         body: JSON.stringify({
           score: result.score,
           total: result.total_questions,
-          skipped: result.skipped || skipped,
-          hints_used: result.hints_used || hintsUsed,
-          category: currentQuestion?.category || "",
+          skipped: result.skipped || gameState.skipped,
+          hints_used: result.hints_used || gameState.hintsUsed,
+          category: gameState.currentQuestion?.category || "",
           difficulty: difficulty || "any",
           is_daily: isDaily
         })
       });
       sessionStorage.removeItem('activeGameId');
       navigate("/game/score", {
-        state: { score: result.score, total: result.total_questions, skipped: result.skipped || skipped, isDaily },
+        state: {
+          score: result.score,
+          total: result.total_questions,
+          skipped: result.skipped ?? gameState.skipped,
+          isDaily },
       });
     } catch (err) {
       console.error("Failed to end game:", err);
@@ -293,7 +317,7 @@ const handleSkip = async () => {
   };
 
   const handleAnswer = async (option: string) => {
-    if (answered || !gameId) return;
+    if (answered || !gameState) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
@@ -303,14 +327,15 @@ const handleSkip = async () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ game_id: gameId, answer: option })
+        body: JSON.stringify({ game_id: gameState.gameId, answer: option })
       });
       if (!res.ok) throw new Error('Answer failed');
       const data = await res.json();
+
       setSelected(option);
       setAnswered(true);
       if (data.correct) {
-        setScore((s) => s + 1);
+        setGameState(prev => prev ? { ...prev, score: prev.score + 1 } : null);
       }
     } catch (err) {
       console.error(err);
@@ -320,9 +345,8 @@ const handleSkip = async () => {
 const handleHint = async () => {
   console.log("DEBUG: In handleHint")
   // check if hint is necessary
-  if (answered || !gameId || !currentQuestion)
-  {
-    console.log("DEBUG: gameID=" + gameId + " answered=" + answered + " currentQuestion=" + currentQuestion);
+  if (answered || !gameState) {
+    console.log("DEBUG: In handleHint", { gameState, answered });
     return;
   }
   console.log("DEBUG: debug is necessary")
@@ -337,20 +361,23 @@ const handleHint = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ game_id: gameId })
+      body: JSON.stringify({ game_id: gameState.gameId })
     });
 
     if (!res.ok) throw new Error('Hint failed');
     const q = await res.json(); // updated question from backend
     console.log("HINT RESPONSE:", q);
     console.log("Removed answers:", q.removed_answers);
-    setHintsUsed((h) => h + 1);
-    setCurrentQuestion(q);
     const availableIncorrect = q.incorrect_answers.filter(
       (opt) => !q.removed_answers.includes(opt)
     );
     console.log("AvailableIncorrect" + availableIncorrect);
-    setOptions(shuffleArray([q.correct_answer, ...availableIncorrect]));
+    setGameState(prev => prev ? {
+      ...prev,
+      currentQuestion: q,
+      hintsUsed: prev.hintsUsed + 1,
+      options: shuffleArray([q.correct_answer, ...availableIncorrect])
+    } : null);
   } catch (err) {
     console.error(err);
   }
@@ -388,7 +415,7 @@ const handleHint = async () => {
     </div>
   );
 
-  if (!currentQuestion) return (
+  if (!gameState) return (
     <div className="min-h-screen bg-[#f5f0e8]">
       <Navbar />
       <div className="flex justify-center items-center h-64">
@@ -398,8 +425,8 @@ const handleHint = async () => {
     </div>
   );
 
-  const q = currentQuestion;
-  const progress = Math.round(((currentIndex + 1) / totalQuestions) * 100);
+  const q = gameState.currentQuestion;
+  const progress = Math.round(((gameState.currentIndex + 1) / gameState.totalQuestions) * 100);
 
   const diffColor: Record<string, string> = {
     easy: "text-green-700 bg-green-100",
@@ -420,8 +447,8 @@ const handleHint = async () => {
 
           
           <div className="flex justify-between items-center text-white text-sm">
-            <span className="font-semibold">Question {currentIndex + 1} of {totalQuestions}</span>
-            <span className="font-semibold">Score: {score}</span>
+            <span className="font-semibold">Question {gameState.currentIndex + 1} of {gameState.totalQuestions}</span>
+            <span className="font-semibold">Score: {gameState.score}</span>
           </div>
 
          
@@ -447,7 +474,7 @@ const handleHint = async () => {
 
          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {options.map((opt, i) => {
+            {gameState.options.map((opt, i) => {
               let cls = "w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2 transition-all cursor-pointer border-none ";
               if (!answered) {
                 cls+= "bg-white text-[#1a1a1a] hover:bg-gray-100";
@@ -492,7 +519,7 @@ const handleHint = async () => {
                   onClick={handleNext}
                   className="px-6 py-2 rounded-lg text-sm font-bold bg-white text-[#638F77] hover:bg-gray-100 cursor-pointer border-none"
                 >
-                  {currentIndex + 1 >= totalQuestions ? "See Results" : "Next"}
+                  {gameState.currentIndex + 1 >= gameState.totalQuestions ? "See Results" : "Next"}
                 </button>
               </div>
             )}
