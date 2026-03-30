@@ -47,114 +47,115 @@ export function TriviaGame() {
   }>(null);
 
   const hasFetched = useRef(false);
-const continueGame = async (existingGameId: string) => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) return;
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/game/continue`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ game_id: existingGameId })
-    });
+  const continueGame = async (existingGameId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
 
-    if (!res.ok) {
-      sessionStorage.removeItem('activeGameId');
-      startGame();
-      return;
-    }
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/continue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ game_id: existingGameId })
+      });
 
-    const data = await res.json();
-    if (data.end) {
-      await endGame();
-      return;
-    }
-
-    const availableIncorrect = data.question.incorrect_answers.filter(
-      (opt: string) => !data.question.removed_answers.includes(opt)
-    );
-
-    const game = {
-      gameId: data.game_id,
-      currentQuestion: data.question,
-      currentIndex: data.current_index,
-      score: data.score,
-      skipped: data.skipped,
-      hintsUsed: data.hints_used,
-      totalQuestions: data.total_questions,
-      options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
-    };
-
-    setGameState(game);
-    setLoading(false);
-    setSelected(null);
-    setAnswered(false);
-    sessionStorage.setItem('activeGameId', data.game_id);
-
-  } catch (err) {
-    console.error('Error in continueGame:', err);
-    startGame();
-  }
-};
-
-useEffect(() => {
-  if (hasFetched.current) return;
-  hasFetched.current = true;
-
-  const checkServerForActiveGame = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) return startGame();
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/game/active`, {
-      headers: {
-        "Authorization": `Bearer ${session.access_token}`
+      if (!res.ok) {
+        sessionStorage.removeItem('activeGameId');
+        startGame();
+        return;
       }
-    });
 
-    const data = await res.json();
+      const data = await res.json();
+      if (data.end) {
+        await endGame();
+        return;
+      }
 
-    if (data.active && !location.state) {
-      console.log("Found active game on server: ", data.game_id);
-      continueGame(data.game_id);
-    } else {
-      console.log("No active game found, starting new game");
+      const availableIncorrect = data.question.incorrect_answers.filter(
+        (opt: string) => !data.question.removed_answers.includes(opt)
+      );
+
+      const game = {
+        gameId: data.game_id,
+        currentQuestion: data.question,
+        currentIndex: data.current_index,
+        score: data.score,
+        skipped: data.skipped,
+        hintsUsed: data.hints_used,
+        totalQuestions: data.total_questions,
+        options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
+      };
+
+      setGameState(game);
+      setLoading(false);
+      setSelected(null);
+      setAnswered(false);
+      sessionStorage.setItem('activeGameId', data.game_id);
+
+    } catch (err) {
+      console.error('Error in continueGame:', err);
       startGame();
     }
   };
 
-  checkServerForActiveGame();
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
 
-  // Clear the location state after using it to prevent it from persisting on refresh
-  if (location.state) {
-    window.history.replaceState(null, '', window.location.pathname);
-  }
-}, []);
+    const checkServerForActiveGame = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return startGame();
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/active`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (data.active && !location.state) {
+        console.log("Found active game on server: ", data.game_id);
+        continueGame(data.game_id);
+      } else {
+        console.log("No active game found, starting new game");
+        startGame();
+      }
+    };
+
+    checkServerForActiveGame();
+
+    // Clear the location state after using it to prevent it from persisting on refresh
+    if (location.state) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
 
 
-const handleSkip = async () => {
-  if (answered || !gameState) return;
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) return;
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/game/skip`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ game_id: gameState.gameId })
-    });
-    if (!res.ok) throw new Error('Skip failed');
-    const skipData = await res.json();
-    setGameState(prev => prev ? { ...prev, skipped: skipData.skipped } : null);
-    await fetchCurrentQuestion();
-  } catch (err) {
-    console.error(err);
-  }
-};
+  const handleSkip = async () => {
+    if (answered || !gameState) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/skip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ game_id: gameState.gameId })
+      });
+      if (!res.ok) throw new Error('Skip failed');
+      const skipData = await res.json();
+      setGameState(prev => prev ? { ...prev, skipped: skipData.skipped } : null);
+      await fetchCurrentQuestion();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   
   useEffect(() => {
@@ -342,46 +343,46 @@ const handleSkip = async () => {
     }
   };
 
-const handleHint = async () => {
-  console.log("DEBUG: In handleHint")
-  // check if hint is necessary
-  if (answered || !gameState) {
-    console.log("DEBUG: In handleHint", { gameState, answered });
-    return;
-  }
-  console.log("DEBUG: debug is necessary")
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log("Session in hint:", session);
-    if (!session?.access_token) return;
-    console.log("not session passed");
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/game/hint`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ game_id: gameState.gameId })
-    });
+  const handleHint = async () => {
+    console.log("DEBUG: In handleHint")
+    // check if hint is necessary
+    if (answered || !gameState) {
+      console.log("DEBUG: In handleHint", { gameState, answered });
+      return;
+    }
+    console.log("DEBUG: debug is necessary")
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Session in hint:", session);
+      if (!session?.access_token) return;
+      console.log("not session passed");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/hint`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ game_id: gameState.gameId })
+      });
 
-    if (!res.ok) throw new Error('Hint failed');
-    const q = await res.json(); // updated question from backend
-    console.log("HINT RESPONSE:", q);
-    console.log("Removed answers:", q.removed_answers);
-    const availableIncorrect = q.incorrect_answers.filter(
-      (opt) => !q.removed_answers.includes(opt)
-    );
-    console.log("AvailableIncorrect" + availableIncorrect);
-    setGameState(prev => prev ? {
-      ...prev,
-      currentQuestion: q,
-      hintsUsed: prev.hintsUsed + 1,
-      options: shuffleArray([q.correct_answer, ...availableIncorrect])
-    } : null);
-  } catch (err) {
-    console.error(err);
-  }
-};
+      if (!res.ok) throw new Error('Hint failed');
+      const q = await res.json(); // updated question from backend
+      console.log("HINT RESPONSE:", q);
+      console.log("Removed answers:", q.removed_answers);
+      const availableIncorrect = q.incorrect_answers.filter(
+        (opt) => !q.removed_answers.includes(opt)
+      );
+      console.log("AvailableIncorrect" + availableIncorrect);
+      setGameState(prev => prev ? {
+        ...prev,
+        currentQuestion: q,
+        hintsUsed: prev.hintsUsed + 1,
+        options: shuffleArray([q.correct_answer, ...availableIncorrect])
+      } : null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleNext = async () => {
     console.log("handleNext called");
