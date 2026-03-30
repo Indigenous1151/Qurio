@@ -17,7 +17,7 @@ class MongoDBClient:
         print("Connected to MongoDB!")
 
     def get_collection(self, name: str):
-        return self.__db[name]
+        return self.__db[name] if self.__db is not None else None
 
     def disconnect(self):
         if self.__client:

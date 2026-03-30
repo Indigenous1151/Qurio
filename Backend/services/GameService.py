@@ -9,14 +9,16 @@ class GameService:
         self.question_repo = question_repo
         self.game_repo = game_repo
         self.trivia_service = trivia_service
-        self.active_games = {}
+        self.active_games: dict[str, Game] = {}
 
-    def create_classic_game(self, user):
-        questions_data = self.trivia_service.fetch_questions(10)
+    def create_classic_game(self, user, count=10, category=None, difficulty=None):
+        questions_data = self.trivia_service.fetch_questions(count, category, difficulty)
         questions = [Question(q) for q in questions_data]
 
         game = Game(user, questions, is_daily=False)
         self.active_games[game.game_id] = game
+        # Save to database for persistence
+        self.game_repo.save_active_game(game)
         return game
     
     def create_daily_game(self, user):
@@ -25,14 +27,24 @@ class GameService:
 
         game = Game(user, questions, is_daily=False)
         self.active_games[game.game_id] = game
+        # Save to database for persistence
+        self.game_repo.save_active_game(game)
         return game
 
     def submit_answer(self, game_id, answer):
-        game = self.active_games.get(game_id)
-        return game.submit_answer(answer)
+        game = self._get_game_from_db_or_memory(game_id)
+        if not game:
+            return None
+        result = game.submit_answer(answer)
+        self.game_repo.save_active_game(game)
+        return result
     
-    def skip_question(self, game):
-        game.skip_question(self)
+    def skip_question(self, game_id):
+        game = self._get_game_from_db_or_memory(game_id)
+        if not game:
+            return
+        game.skip_question()
+        self.game_repo.save_active_game(game)
 
     def save_result(self, user_id, score, total, skipped, category, difficulty, is_daily,hints_used):
         
@@ -47,23 +59,53 @@ class GameService:
         self.game_repo.save(result)
         return result
 
-    def get_hint(self, game_id):
-        game: Game = self.active_games.get(game_id)
+    def get_hint(self, game_id) -> Question | None:
+        game: Game = self._get_game_from_db_or_memory(game_id)
+        if not game:
+            return None
         hint = MultipleChoiceHint()
         game.get_hint(hint)
+        self.game_repo.save_active_game(game)
         return game.questions[game.current_index]
 
-    def end_game(self, game_id):
-        game = self.active_games.get(game_id)
+    def get_current_question(self, game_id):
+        game = self._get_game_from_db_or_memory(game_id)
+        if not game or game.current_index >= len(game.questions):
+            return None
+        return game.questions[game.current_index]
+
+    def get_game(self, game_id):
+        return self._get_game_from_db_or_memory(game_id)
+
+    def _get_game_from_db_or_memory(self, game_id):
+        """Get game from memory first, then try database"""
+        # Try memory first (faster)
+        if game_id in self.active_games:
+            return self.active_games[game_id]
+        
+        # If not in memory, load from database
+        game = self.game_repo.load_active_game(game_id)
+        if game:
+            self.active_games[game_id] = game
+        return game
+
+    def end_game(self, game_id: str):
+        game: Game = self._get_game_from_db_or_memory(game_id)
+        if not game:
+            return None
 
         result = GameResult(
             user=game.user,
             score=game.get_score(),
             total_questions=len(game.questions),
             is_daily=game.is_daily,
-            hints_used=game.hints_used
+            hints_used=game.hints_used,
+            skipped=game.skipped
         )
         self.game_repo.save(result)
-        del self.active_games[game_id]
+        # Clean up from memory and database
+        if game_id in self.active_games:
+            del self.active_games[game_id]
+        self.game_repo.delete_active_game(game_id)
 
         return result

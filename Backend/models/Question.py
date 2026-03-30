@@ -9,7 +9,7 @@ class Question:
         self.question = data.get("question")
         self.correct_answer = data.get("correct_answer")
         self.incorrect_answers: list[str] = cast(list[str], data.get("incorrect_answers"))
-        self.removed_answers = list()
+        self.removed_answers = data.get("removed_answers", [])
 
     def to_dict(self):
         return {

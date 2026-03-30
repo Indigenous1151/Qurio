@@ -2,7 +2,7 @@ import datetime
 import uuid
 
 class GameResult:
-    def __init__(self, user, score, total_questions, is_daily, hints_used,skipped):
+    def __init__(self, user, score, total_questions, is_daily, hints_used, skipped):
         self.result_id = str(uuid.uuid4())
         self.user = user
         self.score = score

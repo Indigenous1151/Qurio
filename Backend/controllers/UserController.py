@@ -6,8 +6,9 @@ user_bp = Blueprint('user', __name__, url_prefix='/user')
 
 
 class UserController:
-    def __init__(self, service: UserService):
+    def __init__(self, service: UserService, get_user_id_func):
         self.__service = service
+        self.get_user_id = get_user_id_func
         self.__register_routes()
 
     def __register_routes(self):
@@ -18,7 +19,7 @@ class UserController:
     def update_personal_information(self):
         data: dict = request.get_json()
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.get_user_id(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
@@ -41,7 +42,7 @@ class UserController:
     def update_public_profile(self):
         data: dict = request.get_json()
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.get_user_id(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
