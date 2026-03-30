@@ -1,11 +1,12 @@
 from models.Game import Game
 from models.Question import Question
 from models.GameResult import GameResult
+from GameRepository import GameRepository
 from models.MultipleChoiceHint import MultipleChoiceHint
 
 
 class GameService:
-    def __init__(self, question_repo, game_repo, trivia_service):
+    def __init__(self, question_repo, game_repo: GameRepository, trivia_service):
         self.question_repo = question_repo
         self.game_repo = game_repo
         self.trivia_service = trivia_service
@@ -17,15 +18,16 @@ class GameService:
 
         game = Game(user, questions, is_daily=False)
         self.active_games[game.game_id] = game
+
         # Save to database for persistence
         self.game_repo.save_active_game(game)
         return game
-    
+
     def create_daily_game(self, user):
         questions_data = self.trivia_service.fetch_questions(5)
         questions = [Question(q) for q in questions_data]
 
-        game = Game(user, questions, is_daily=False)
+        game = Game(user, questions, is_daily=True)
         self.active_games[game.game_id] = game
         # Save to database for persistence
         self.game_repo.save_active_game(game)
@@ -38,7 +40,7 @@ class GameService:
         result = game.submit_answer(answer)
         self.game_repo.save_active_game(game)
         return result
-    
+
     def skip_question(self, game_id):
         game = self._get_game_from_db_or_memory(game_id)
         if not game:
@@ -47,7 +49,6 @@ class GameService:
         self.game_repo.save_active_game(game)
 
     def save_result(self, user_id, score, total, skipped, category, difficulty, is_daily,hints_used):
-        
         result = GameResult(
             user=user_id,
             score=score,
@@ -60,9 +61,10 @@ class GameService:
         return result
 
     def get_hint(self, game_id) -> Question | None:
-        game: Game = self._get_game_from_db_or_memory(game_id)
+        game: Game | None = self._get_game_from_db_or_memory(game_id)
         if not game:
             return None
+
         hint = MultipleChoiceHint()
         game.get_hint(hint)
         self.game_repo.save_active_game(game)
@@ -89,8 +91,37 @@ class GameService:
             self.active_games[game_id] = game
         return game
 
+    def get_active_game(self, user_id: str) -> Game | None:
+        # Find the active game for this user
+        for game in self.active_games.values():
+            if game.user == user_id:
+                return game
+            
+        # None in memory, so get active games from database for the user
+        for game_doc in self.game_repo.active_games_collection.find({"user": user_id}):
+            from models.Question import Question
+            questions = [Question(q) for q in game_doc.get("questions", [])]
+            game = Game(
+                game_doc["user"],
+                questions,
+                is_daily=game_doc.get("is_daily", False),
+                game_id=game_doc["game_id"]
+            )
+            game.current_index = game_doc.get("current_index", 0)
+            game.score = game_doc.get("score", 0)
+            game.questions_answered = game_doc.get("questions_answered", 0)
+            game.hints_used = game_doc.get("hints_used", 0)
+            game.skipped = game_doc.get("skipped", 0)
+
+            # Load into memory for next call
+            self.active_games[game.game_id] = game
+            return game
+
+        return None
+
     def end_game(self, game_id: str):
-        game: Game = self._get_game_from_db_or_memory(game_id)
+        game: Game | None = self._get_game_from_db_or_memory(game_id)
+
         if not game:
             return None
 

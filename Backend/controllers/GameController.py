@@ -22,6 +22,7 @@ class GameController:
         game_bp.add_url_rule('/end', 'end_game', self.end_game, methods=['POST'])
         game_bp.add_url_rule('/result', 'save_result', self.save_result, methods=['POST'])
         game_bp.add_url_rule('/hint', 'get_hint', self.get_hint, methods=['POST'])
+        game_bp.add_url_rule('/active', 'get_active_game', self.get_active_game, methods=['GET'])
 
     def start_classic_game(self):
         try:
@@ -64,6 +65,35 @@ class GameController:
             }), HttpStatus.OK
         except Exception as e:
             print("Error in start_classic_game:", e)
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+    def get_active_game(self):
+        try:
+            print("Checking for active game")
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            active_game = self.service.get_active_game(user_id)
+
+            if not active_game:
+                return jsonify({"active": False}), HttpStatus.OK
+
+            return jsonify({
+                "active": True,
+                "game_id": active_game.game_id,
+                "current_index": active_game.current_index,
+                "score": active_game.score,
+                "skipped": active_game.skipped,
+                "hints_used": active_game.hints_used,
+                "question": active_game.questions[active_game.current_index].to_dict()
+                            if active_game.current_index < len(active_game.questions)
+                            else None,
+                "total_questions": len(active_game.questions),
+                "is_daily": active_game.is_daily
+            }), HttpStatus.OK
+
+        except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def continue_game(self):
