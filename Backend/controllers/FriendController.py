@@ -14,6 +14,7 @@ class FriendController:
         friend_bp.add_url_rule('/decline-email', 'decline_email', self.decline_from_email, methods=['GET'])
         friend_bp.add_url_rule('/search', 'search_user', self.search_user, methods=['GET'])
         friend_bp.add_url_rule('/list', 'get_friends', self.get_friends_list, methods=['GET'])
+        friend_bp.add_url_rule('/remove', 'remove_friend', self.remove_friend, methods=['DELETE'])
 
     def accept_from_email(self):
         try:
@@ -102,5 +103,15 @@ class FriendController:
                 return jsonify({"error": "Unauthorized"}), 401
             friends = self.__service.get_friends_list(user_id)
             return jsonify({"friends": friends}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    def remove_friend(self):
+        try:
+            user_id = request.headers.get('X-User-Id')
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), 401
+            data = request.get_json()
+            success = self.__service.remove_friend(user_id, data['friend_id'])
+            return jsonify({"message": "Friend removed"}), 200 if success else 500
         except Exception as e:
             return jsonify({"error": str(e)}), 500
