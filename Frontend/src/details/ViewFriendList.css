@@ -1,0 +1,51 @@
+.add-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #638F77;
+    color: white;
+    font-weight: bold;
+    font-size: 0.875rem; 
+    padding: 0.625rem 10rem;
+    border-radius: 9999px;
+    border: none;
+}
+
+.friend-row {
+  display: flex;
+  background-color: #94caad;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #ccc;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+.friend-name {
+  font-size: 23px;
+  color: black;
+}
+
+.remove-button {
+  background-color: #638F77;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 9999px;
+}
+
+.no-friends-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #638F77;
+  color: white;
+  font-weight: bold;
+  font-size: 18px; 
+  padding: 0.625rem 10rem;
+  border-radius: 9999px;
+  border: none;
+  margin-bottom: 50px;
+  margin-top: 30px;
+}
