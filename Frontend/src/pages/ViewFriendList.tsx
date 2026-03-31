@@ -63,6 +63,9 @@ export function ViewFriendList(){
     (friend.sender_id === userId || friend.receiver_id === userId)
   );
 
+  function removeFriend(requestId: string) {
+    setFriends(prevFriends => prevFriends.filter(friend => friend.request_id !== requestId));
+  }
 
   return(
   <div>
@@ -100,7 +103,9 @@ export function ViewFriendList(){
               return (
                 <div key={friend.request_id} className="friend-row">
                   <span className= "friend-name">{friendId}</span>
-                  <button className="remove-button">Remove Friend</button>
+                  <button className="remove-button" onClick={() => removeFriend(friend.request_id)}>
+                    Remove Friend
+                  </button>
                 </div>
               );
             })
