@@ -90,15 +90,21 @@ export function ViewFriendList(){
         </div>
 
         <div className="friend-list">
-          {acceptedFriends.map(friend => {
-            const friendId = friend.sender_id === userId ? friend.receiver_id : friend.sender_id;
-            return (
-              <div key={friend.request_id} className="friend-row">
-                <span>{friendId}</span>
-                <button className="remove-button">Remove Friend</button>
-              </div>
-            );
-          })}
+         {acceptedFriends.length === 0 ? (
+            <p className="no-friends-message">
+              You currently have no friends. Click "Add a Friend!" to get started.
+            </p>
+          ) : (
+            acceptedFriends.map(friend => {
+              const friendId = friend.sender_id === userId ? friend.receiver_id : friend.sender_id;
+              return (
+                <div key={friend.request_id} className="friend-row">
+                  <span className= "friend-name">{friendId}</span>
+                  <button className="remove-button">Remove Friend</button>
+                </div>
+              );
+            })
+          )}
         </div>
 
       <Footer/>
