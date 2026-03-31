@@ -14,6 +14,7 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Logout } from './pages/Logout'
 import { PersonalStatistics } from './pages/PersonalStatistics'
+import { ViewFriendList } from './pages/ViewFriendList'
 
 function App() {
  
@@ -34,6 +35,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path= "/Logout" element={<Logout/>} />
         <Route path= "/personal-statistics" element={<PersonalStatistics/>} />
+        <Route path= "/view-friend-list" element={<ViewFriendList/>} />
       </Routes>
     </Router>
     
