@@ -15,6 +15,7 @@ import { ResetPassword } from './pages/ResetPassword'
 import { Logout } from './pages/Logout'
 import { PersonalStatistics } from './pages/PersonalStatistics'
 import { ViewFriendList } from './pages/ViewFriendList'
+import { AddFriend } from './pages/AddFriend'
 
 function App() {
  
@@ -36,6 +37,7 @@ function App() {
         <Route path= "/Logout" element={<Logout/>} />
         <Route path= "/personal-statistics" element={<PersonalStatistics/>} />
         <Route path= "/view-friend-list" element={<ViewFriendList/>} />
+        <Route path= "/add-friend" element={<AddFriend/>} />
       </Routes>
     </Router>
     

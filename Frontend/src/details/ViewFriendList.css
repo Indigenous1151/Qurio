@@ -1,0 +1,13 @@
+
+.add-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #638F77;
+    color: white;
+    font-weight: bold;
+    font-size: 0.875rem; 
+    padding: 0.625rem 1.25rem;
+    border-radius: 9999px;
+    border: none;
+}
