@@ -1,25 +1,67 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
 import '../details/ViewFriendList.css';
 import { supabase } from '../supabaseClient/supabaseClient'
 import { useNavigate } from "react-router-dom";
 
+
+type Friend = {
+  request_id: string;
+  sender_id: string;
+  receiver_id: string;
+  status: string;
+}
+
 export function ViewFriendList(){
            
   const navigate = useNavigate();
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
 
   function addFriend() {
     navigate("/add-friend");
   }
 
-    const [friends, setFriends] = useState([
-    { id: 1, username: "example friend 1" },
-    { id: 2, username: "example friend 2" },
-    { id: 3, username: "example friend 3" },
-    ]);
+  // delete at a later time - testing with mock data 
+  // const [friends, setFriends] = useState<Friend[]>([
+  //   { request_id: "1", sender_id: "katelyn", receiver_id: "cody", status: "pending" },
+  //   { request_id: "2", sender_id: "katelyn", receiver_id: "john", status: "accepted" },
+  //   { request_id: "3", sender_id: "katelyn", receiver_id: "dawn", status: "accepted" },
+  //   { request_id: "4", sender_id: "katelyn", receiver_id: "mike", status: "accepted" },
+  // ]);
+  // const [userId, setUserId] = useState<string>("katelyn");
 
+
+  useEffect(() => {
+    async function fetchUser() {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserId(data.user.id);
+      } else {
+        console.error("No user found or error:", error);
+      }
+    }
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    async function fetchFriends() {
+      const res = await fetch(`http://localhost:5000/friends/${userId}`);
+      const data = await res.json();
+      setFriends(data);
+    }
+
+    fetchFriends();
+  }, [userId]);
+
+  const acceptedFriends = friends.filter(friend => 
+    friend.status === "accepted" && 
+    (friend.sender_id === userId || friend.receiver_id === userId)
+  );
 
 
   return(
@@ -47,16 +89,17 @@ export function ViewFriendList(){
             <br></br>
         </div>
 
-
         <div className="friend-list">
-            {friends.map((friend) => (
-                <div key={friend.id} className="friend-row">
-                <span className="friend-name">{friend.username}</span>
-                <button className="friend-button" onClick={() => {}}>Remove Friend</button> 
-                </div>                
-            ))}
+          {acceptedFriends.map(friend => {
+            const friendId = friend.sender_id === userId ? friend.receiver_id : friend.sender_id;
+            return (
+              <div key={friend.request_id} className="friend-row">
+                <span>{friendId}</span>
+                <button className="remove-button">Remove Friend</button>
+              </div>
+            );
+          })}
         </div>
-
 
       <Footer/>
     </div>
