@@ -8,11 +8,19 @@ import { useNavigate } from "react-router-dom";
 
 export function ViewFriendList(){
            
-    const navigate = useNavigate(); 
-   
-   function addFriend() {
-        navigate("/add-friend");
-    }
+  const navigate = useNavigate();
+
+  function addFriend() {
+    navigate("/add-friend");
+  }
+
+    const [friends, setFriends] = useState([
+    { id: 1, username: "example friend 1" },
+    { id: 2, username: "example friend 2" },
+    { id: 3, username: "example friend 3" },
+    ]);
+
+
 
   return(
   <div>
@@ -34,6 +42,19 @@ export function ViewFriendList(){
         <div>   
             <button className = "add-button"
                      onClick={addFriend}> Add a Friend!</button>
+        </div>
+        <div>
+            <br></br>
+        </div>
+
+
+        <div className="friend-list">
+            {friends.map((friend) => (
+                <div key={friend.id} className="friend-row">
+                <span className="friend-name">{friend.username}</span>
+                <button className="friend-button" onClick={() => {}}>Remove Friend</button> 
+                </div>                
+            ))}
         </div>
 
 
