@@ -115,9 +115,33 @@ export function ViewFriendList(){
     //(friend.sender_id === userId || friend.receiver_id === userId)
   );
 
-  function removeFriend(requestId: string) {
-    setFriends(prevFriends => prevFriends.filter(friend => friend.request_id !== requestId));
+async function removeFriend(friendId: string, requestId: string) {
+  try {
+    if (!userId) return;
+
+    const res = await fetch("http://localhost:5000/friend/remove", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "X-User-Id": userId
+      },
+      body: JSON.stringify({
+        friend_id: friendId
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to remove friend: ${res.status}`);
+    }
+
+    setFriends(prev =>
+      prev.filter(friend => friend.request_id !== requestId)
+    );
+
+  } catch (err) {
+    console.error("Error removing friend:", err);
   }
+}
 
   return(
   <div>
@@ -163,7 +187,7 @@ export function ViewFriendList(){
               return (
                 <div key={friend.request_id} className="friend-row">
                   <span className="friend-name">{usernames[friendId] || friendId}</span>
-                  <button className="remove-button">
+                  <button className="remove-button" onClick={() => removeFriend(friendId, friend.request_id)}>
                     Remove Friend
                   </button>
                 </div>
