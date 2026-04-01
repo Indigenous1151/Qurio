@@ -18,6 +18,8 @@ import { ViewFriendList } from './pages/ViewFriendList'
 import { AddFriend } from './pages/AddFriend'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { PublicOnlyRoute } from './components/PublicOnlyRoute'
+import { Groups } from "./pages/Groups";
+import { GroupDetails } from "./pages/GroupDetails";
 
 function App() {
  
@@ -46,6 +48,8 @@ function App() {
           <Route path= "/personal-statistics" element={<PersonalStatistics/>} />
           <Route path= "/view-friend-list" element={<ViewFriendList/>} />
           <Route path= "/add-friend" element={<AddFriend/>} />
+          <Route path="/groups" element={<Groups />} />
+          <Route path="/groups/:groupId" element={<GroupDetails />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
