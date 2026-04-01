@@ -17,13 +17,20 @@ from controllers.UserController import UserController, user_bp
 from controllers.AuthController import AuthController, auth_bp
 from controllers.GameController import GameController, game_bp
 from controllers.FriendController import FriendController, friend_bp
+from controllers.StatisticsController import statistics_bp
 from services.FriendService import FriendService
 from FriendRepository import FriendRepository
 
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+CORS(
+    app,
+    origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    supports_credentials=True,
+    allow_headers=["Content-Type", "X-User-Id"],
+    methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"]
+)
 
 supabase = SupabaseClient(
     url=os.getenv("SUPABASE_URL"),
@@ -34,6 +41,8 @@ mongo = MongoDBClient()
 #Database connections
 supabase.connect()
 mongo.connect()
+
+app.config["SUPABASE"] = supabase
 
 # Repository Creation
 user_repo = UserRepository(db_client=supabase)
@@ -63,7 +72,8 @@ app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(friend_bp)
 app.register_blueprint(game_bp)
+app.register_blueprint(statistics_bp)
 
 if __name__ == '__main__':
     print(app.url_map)
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

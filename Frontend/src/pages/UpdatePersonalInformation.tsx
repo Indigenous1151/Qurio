@@ -28,7 +28,7 @@ export function UpdatePersonalInformation(){
             return;
         }
 
-        const response = await fetch('http://localhost:5000/user/personal', {
+        const response = await fetch('http://localhost:5001/user/personal', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
