@@ -115,6 +115,9 @@ export function ViewFriendList(){
     //(friend.sender_id === userId || friend.receiver_id === userId)
   );
 
+  function removeFriend(requestId: string) {
+    setFriends(prevFriends => prevFriends.filter(friend => friend.request_id !== requestId));
+  }
 
   return(
   <div>
