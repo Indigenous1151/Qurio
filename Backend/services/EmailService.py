@@ -25,11 +25,11 @@ class EmailService:
                 <h2 style="color: #638F77;">Friend Request on Qurio!</h2>
                 <p><strong>{sender_username}</strong> has sent you a friend request on Qurio.</p>
                 <div style="margin: 30px 0;">
-                    <a href="http://localhost:5000/friend/accept-email?sender_id={sender_id}&receiver_id={receiver_id}" 
+                    <a href="http://localhost:5001/friend/accept-email?sender_id={sender_id}&receiver_id={receiver_id}" 
                        style="background-color: #638F77; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-right: 10px;">
                         Accept
                     </a>
-                    <a href="http://localhost:5000/friend/decline-email?sender_id={sender_id}&receiver_id={receiver_id}"
+                    <a href="http://localhost:5001/friend/decline-email?sender_id={sender_id}&receiver_id={receiver_id}"
                        style="background-color: #e74c3c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                         Decline
                     </a>

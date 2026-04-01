@@ -59,7 +59,7 @@ const handleSkip = () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
+          await fetch("/game/result", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ const handleSkip = () => {
             body: JSON.stringify({
     score: score,
     total: questions.length,
-    skipped: skipped,
+    skipped: newSkipped,
     hints_used: 0,  // should be updated when hints feature is implemented
     category: questions[0]?.category || "",
     difficulty: difficulty || "any",

@@ -24,7 +24,13 @@ from FriendRepository import FriendRepository
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+CORS(
+    app,
+    origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    supports_credentials=True,
+    allow_headers=["Content-Type", "X-User-Id"],
+    methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"]
+)
 
 supabase = SupabaseClient(
     url=os.getenv("SUPABASE_URL"),
@@ -70,4 +76,4 @@ app.register_blueprint(statistics_bp)
 
 if __name__ == '__main__':
     print(app.url_map)
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

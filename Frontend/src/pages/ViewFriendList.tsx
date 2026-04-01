@@ -53,7 +53,7 @@ export function ViewFriendList(){
 
     async function fetchFriends() {
       try {
-        const res = await fetch("http://localhost:5000/friend/list", {
+        const res = await fetch("http://localhost:5001/friend/list", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -119,7 +119,7 @@ async function removeFriend(friendId: string, requestId: string) {
   try {
     if (!userId) return;
 
-    const res = await fetch("http://localhost:5000/friend/remove", {
+    const res = await fetch("http://localhost:5001/friend/remove", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

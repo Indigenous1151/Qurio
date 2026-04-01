@@ -1,9 +1,17 @@
 from flask import Blueprint, jsonify, request, current_app
+from flask_cors import cross_origin
 from models.Statistics import Statistics
+
+print("StatisticsController loaded")
 
 statistics_bp = Blueprint("statistics", __name__, url_prefix="/api/statistics")
 
-@statistics_bp.route("/me", methods=["GET"])
+@statistics_bp.route("/me", methods=["GET", "OPTIONS"])
+@cross_origin(
+    origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_headers=["X-User-Id", "Content-Type"],
+    methods=["GET", "OPTIONS"]
+)
 def get_my_statistics():
     try:
         user_id = request.headers.get("X-User-Id")
