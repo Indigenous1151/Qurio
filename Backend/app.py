@@ -17,6 +17,7 @@ from controllers.UserController import UserController, user_bp
 from controllers.AuthController import AuthController, auth_bp
 from controllers.GameController import GameController, game_bp
 from controllers.FriendController import FriendController, friend_bp
+from controllers.StatisticsController import statistics_bp
 from services.FriendService import FriendService
 from FriendRepository import FriendRepository
 
@@ -34,6 +35,8 @@ mongo = MongoDBClient()
 #Database connections
 supabase.connect()
 mongo.connect()
+
+app.config["SUPABASE"] = supabase
 
 # Repository Creation
 user_repo = UserRepository(db_client=supabase)
@@ -63,6 +66,7 @@ app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(friend_bp)
 app.register_blueprint(game_bp)
+app.register_blueprint(statistics_bp)
 
 if __name__ == '__main__':
     print(app.url_map)
