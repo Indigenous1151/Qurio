@@ -28,39 +28,13 @@ export function PersonalStatistics() {
         setLoading(true);
         setError("");
 
-        // -----------------------------------------
-        // TEMPORARY MOCK DATA
-        // Replace this later with backend fetch
-        // -----------------------------------------
-        // const mockData: Statistics = {
-        //   username: "Ashley",
-        //   games_played: 42,
-        //   daily_games_played: 12,
-        //   classic_games_played: 30,
-        //   questions_answered: 380,
-        //   correct_answers: 301,
-        //   accuracy: 79.21,
-        //   average_score: 7.17,
-        //   rank: 5,
-        // };
-
-        // // Simulate loading delay
-        // await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // setStats(mockData);
-
-        // -----------------------------------------
-        // REAL BACKEND VERSION LATER
-        // -----------------------------------------
-        
         if (!user) {
           throw new Error("User not logged in.");
         }
 
-        const response = await fetch("http://127.0.0.1:5000/api/statistics/me", {
+        const response = await fetch("/api/statistics/me", {
           method: "GET",
           headers: {
-            "Content-Type": "application/json",
             "X-User-Id": user.id,
           },
         });
