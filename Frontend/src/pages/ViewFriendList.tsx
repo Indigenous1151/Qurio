@@ -18,6 +18,8 @@ export function ViewFriendList(){
   const navigate = useNavigate();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [usernames, setUsernames] = useState<{ [key: string]: string }>({});
+
 
   function addFriend() {
     navigate("/add-friend");
@@ -32,14 +34,14 @@ export function ViewFriendList(){
   // ]);
   // const [userId, setUserId] = useState<string>("katelyn");
 
-
+  // Getting the current user ID that is logged in to Qurio
   useEffect(() => {
     async function fetchUser() {
       const { data, error } = await supabase.auth.getUser();
       if (data?.user) {
         setUserId(data.user.id);
       } else {
-        console.error("No user found or error:", error);
+        console.error("No user found:", error);
       }
     }
 
@@ -50,17 +52,67 @@ export function ViewFriendList(){
     if (!userId) return;
 
     async function fetchFriends() {
-      const res = await fetch(`http://localhost:5000/friends/${userId}`);
-      const data = await res.json();
-      setFriends(data);
+      try {
+        const res = await fetch("http://localhost:5000/friend/list", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Id": userId as string
+          }
+        });
+
+        if (!res.ok) {
+          throw new Error(`Error: ${res.status}`);
+        }
+
+        const data = await res.json();
+        setFriends(data.friends);
+
+      } catch (err) {
+        console.error("Failed to fetch friends:", err);
+      }
     }
 
     fetchFriends();
   }, [userId]);
 
+  // getting usernames from table
+  useEffect(() => {
+    if (!userId || friends.length === 0) return;
+
+    async function fetchUsernames(friendIds: string[]) {
+      const { data, error } = await supabase
+        .from("public_profile") 
+        .select("user_id, username")
+        .in("user_id", friendIds);
+
+      if (error) {
+        console.error("Error fetching usernames:", error);
+        return;
+      }
+
+      const map: { [key: string]: string } = {};
+      data.forEach(user => {
+        map[user.user_id] = user.username;
+      });
+
+      setUsernames(map);
+    }
+
+    const friendIds = friends.map(friend =>
+      friend.sender_id === userId
+        ? friend.receiver_id
+        : friend.sender_id
+    );
+
+    fetchUsernames(friendIds);
+
+  }, [friends, userId]);
+
+  // Filter accepted friends
   const acceptedFriends = friends.filter(friend => 
-    friend.status === "accepted" && 
-    (friend.sender_id === userId || friend.receiver_id === userId)
+    friend.status === "accepted" //&& 
+    //(friend.sender_id === userId || friend.receiver_id === userId)
   );
 
   function removeFriend(requestId: string) {
@@ -84,6 +136,10 @@ export function ViewFriendList(){
           </h1>
           </div>
 
+        <div className ="show-user_id">
+          Your user ID is: {userId}
+        </div>
+
         <div>   
             <button className = "add-button"
                      onClick={addFriend}> Add a Friend!</button>
@@ -99,11 +155,15 @@ export function ViewFriendList(){
             </p>
           ) : (
             acceptedFriends.map(friend => {
-              const friendId = friend.sender_id === userId ? friend.receiver_id : friend.sender_id;
+              const friendId =
+                friend.sender_id === userId
+                  ? friend.receiver_id
+                  : friend.sender_id;
+
               return (
                 <div key={friend.request_id} className="friend-row">
-                  <span className= "friend-name">{friendId}</span>
-                  <button className="remove-button" onClick={() => removeFriend(friend.request_id)}>
+                  <span className="friend-name">{usernames[friendId] || friendId}</span>
+                  <button className="remove-button">
                     Remove Friend
                   </button>
                 </div>
