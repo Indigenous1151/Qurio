@@ -23,7 +23,9 @@ from FriendRepository import FriendRepository
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+#CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"], 
+     allow_headers=["Content-Type", "X-User-Id"])
 
 supabase = SupabaseClient(
     url=os.getenv("SUPABASE_URL"),
