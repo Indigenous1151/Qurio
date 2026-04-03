@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
-import { useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Navbar } from '../components/navbar';
-import { Footer } from '../components/Footer';
+import { Navbar } from "../components/navbar";
+import { Footer } from "../components/Footer";
 import { supabase } from "../client/supabase";
 
-// Mappings to display for menu options
 const CATEGORIES = [
   { id: 9, name: "General Knowledge" },
   { id: 10, name: "Books" },
@@ -30,45 +28,52 @@ const QUESTION_COUNTS = [5, 10, 15, 20];
 
 export function ClassicGame() {
   const navigate = useNavigate();
+
   const [category, setCategory] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [count, setCount] = useState(10);
 
   const hasFetched = useRef(false);
 
-  // Check for active game before creating new one.
+  // 🔥 On page load → check server for active game
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
 
     const checkServerForActiveGame = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.access_token) return;
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/game/active`, {
         headers: {
-          "Authorization": `Bearer ${session.access_token}`
-        }
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       const data = await res.json();
 
+      // 🔥 If an active game exists → immediately redirect
       if (data.active) {
-        console.log("Found active game on server: ", data.game_id);
-        // TODO: jump to TriviaGame instead of having the user create a new game
-      } else {
-        console.log("No active game found, configuring new game");
+        console.log("Found active game, redirecting... ", data.game_id);
+
+        navigate("/game/play", {
+          state: {
+            continueGameId: data.game_id,
+          },
+        });
+
+        return; // stop rendering setup UI
       }
+
+      console.log("No active game found.");
     };
 
     checkServerForActiveGame();
+  }, [navigate]);
 
-    // Clear the location state after using it to prevent it from persisting on refresh
-    // if (location.state) {
-    //   window.history.replaceState(null, '', window.location.pathname);
-    // }
-  }, []);
-
+  // Create a new game (only if no active game exists)
   const handleStart = () => {
     navigate("/game/play", {
       state: { category, difficulty, count, isDaily: false },
@@ -78,14 +83,14 @@ export function ClassicGame() {
   return (
     <div className="min-h-screen bg-[#f5f0e8]">
       <Navbar />
+
       <div className="max-w-lg mx-auto px-4 pt-20 pb-20">
         <h1 className="text-3xl font-bold text-center text-[#1a1a1a] mb-8">
           Classic Game Setup
         </h1>
 
         <div className="bg-[#638F77] rounded-2xl p-8 flex flex-col gap-6">
-
-          
+          {/* Category */}
           <div className="flex flex-col gap-2">
             <label className="text-white font-semibold text-sm uppercase tracking-wide">
               Category
@@ -97,12 +102,14 @@ export function ClassicGame() {
             >
               <option value="">Any Category</option>
               {CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
           </div>
 
-          
+          {/* Difficulty */}
           <div className="flex flex-col gap-2">
             <label className="text-white font-semibold text-sm uppercase tracking-wide">
               Difficulty
@@ -111,11 +118,14 @@ export function ClassicGame() {
               {DIFFICULTIES.map((d) => (
                 <button
                   key={d}
-                  onClick={() => setDifficulty(difficulty === d ? "" : d)}
+                  onClick={() =>
+                    setDifficulty(difficulty === d ? "" : d)
+                  }
                   className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize transition-all cursor-pointer border-none
-                    ${difficulty === d
-                      ? "bg-white text-[#638F77]"
-                      : "bg-white/30 text-white hover:bg-white/50"
+                    ${
+                      difficulty === d
+                        ? "bg-white text-[#638F77]"
+                        : "bg-white/30 text-white hover:bg-white/50"
                     }`}
                 >
                   {d}
@@ -124,7 +134,7 @@ export function ClassicGame() {
             </div>
           </div>
 
-          
+          {/* Number of questions */}
           <div className="flex flex-col gap-2">
             <label className="text-white font-semibold text-sm uppercase tracking-wide">
               Number of Questions
@@ -135,9 +145,10 @@ export function ClassicGame() {
                   key={n}
                   onClick={() => setCount(n)}
                   className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none
-                    ${count === n
-                      ? "bg-white text-[#638F77]"
-                      : "bg-white/30 text-white hover:bg-white/50"
+                    ${
+                      count === n
+                        ? "bg-white text-[#638F77]"
+                        : "bg-white/30 text-white hover:bg-white/50"
                     }`}
                 >
                   {n}
@@ -146,16 +157,16 @@ export function ClassicGame() {
             </div>
           </div>
 
-          
+          {/* Start button */}
           <button
             onClick={handleStart}
             className="w-full bg-white text-[#638F77] font-bold py-3 rounded-xl text-base mt-2 hover:bg-gray-100 transition-all cursor-pointer border-none"
           >
-            Start Game 
+            Start Game
           </button>
-
         </div>
       </div>
+
       <Footer />
     </div>
   );

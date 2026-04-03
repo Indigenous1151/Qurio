@@ -29,7 +29,7 @@ function shuffleArray(arr: string[]) {
 export function TriviaGame() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { category, difficulty, count, isDaily } =location.state|| {};
+  const { category, difficulty, count, isDaily, continueGameId } = location.state || {};
   console.log("Game state:", location.state);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,6 +106,13 @@ export function TriviaGame() {
     hasFetched.current = true;
 
     const checkServerForActiveGame = async () => {
+      // If routing requests a continueGameId from ClassicGame, use it immediately
+      if (continueGameId) {
+        console.log("continueGameId found in state:", continueGameId);
+        continueGame(continueGameId);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return startGame();
 
@@ -117,7 +124,7 @@ export function TriviaGame() {
 
       const data = await res.json();
 
-      if (data.active && !location.state) {
+      if (data.active) {
         console.log("Found active game on server: ", data.game_id);
         continueGame(data.game_id);
       } else {
@@ -132,7 +139,7 @@ export function TriviaGame() {
     if (location.state) {
       window.history.replaceState(null, '', window.location.pathname);
     }
-  }, []);
+  }, [continueGameId]);
 
 
   const handleSkip = async () => {

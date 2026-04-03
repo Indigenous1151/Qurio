@@ -10,7 +10,7 @@ class GroupController:
 
     def __register_routes(self):
         group_bp.add_url_rule('/create', 'create_group', self.create_group, methods=['POST'])
-        group_bp.add_url_rule('/invite', 'invite_user', self.invite_user, methods=['POST'])
+        # group_bp.add_url_rule('/invite', 'invite_user', self.invite_user, methods=['POST'])
         group_bp.add_url_rule('/my-groups', 'get_user_groups', self.get_user_groups, methods=['GET'])  
 
     def create_group(self):

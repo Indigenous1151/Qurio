@@ -32,7 +32,7 @@ from FriendRepository import FriendRepository
 app = Flask(__name__)
 CORS(app, 
      resources={r"/*": {"origins": "http://localhost:5173"}},
-     allow_headers=["Content-Type", "X-User-Id"],
+     allow_headers="*",
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      supports_credentials=True)
 
