@@ -14,8 +14,12 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Logout } from './pages/Logout'
 import { PersonalStatistics } from './pages/PersonalStatistics'
+import { ViewFriendList } from './pages/ViewFriendList'
+import { AddFriend } from './pages/AddFriend'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { PublicOnlyRoute } from './components/PublicOnlyRoute'
+import { Groups } from "./pages/Groups";
+import { GroupDetails } from "./pages/GroupDetails";
 
 function App() {
  
@@ -42,6 +46,10 @@ function App() {
           <Route path="/game/daily" element={<DailyGame />} />
           <Route path= "/Logout" element={<Logout/>} />
           <Route path= "/personal-statistics" element={<PersonalStatistics/>} />
+          <Route path= "/view-friend-list" element={<ViewFriendList/>} />
+          <Route path= "/add-friend" element={<AddFriend/>} />
+          <Route path="/groups" element={<Groups />} />
+          <Route path="/groups/:groupId" element={<GroupDetails />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />

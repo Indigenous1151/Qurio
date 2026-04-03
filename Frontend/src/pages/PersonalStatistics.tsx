@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "../details/PersonalStatistics.css";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
+import { useAuth } from "../client/AuthProvider";
 
 type Statistics = {
   username: string;
@@ -16,6 +17,7 @@ type Statistics = {
 };
 
 export function PersonalStatistics() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,34 +28,15 @@ export function PersonalStatistics() {
         setLoading(true);
         setError("");
 
-        // -----------------------------------------
-        // TEMPORARY MOCK DATA
-        // Replace this later with backend fetch
-        // -----------------------------------------
-        const mockData: Statistics = {
-          username: "Ashley",
-          games_played: 42,
-          daily_games_played: 12,
-          classic_games_played: 30,
-          questions_answered: 380,
-          correct_answers: 301,
-          accuracy: 79.21,
-          average_score: 7.17,
-          rank: 5,
-        };
+        if (!user) {
+          throw new Error("User not logged in.");
+        }
 
-        // Simulate loading delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        setStats(mockData);
-
-        // -----------------------------------------
-        // REAL BACKEND VERSION LATER
-        // -----------------------------------------
-        /*
-        const response = await fetch("http://127.0.0.1:5000/api/statistics/me", {
+        const response = await fetch("/api/statistics/me", {
           method: "GET",
-          credentials: "include",
+          headers: {
+            "X-User-Id": user.id,
+          },
         });
 
         const data = await response.json();
@@ -63,7 +46,7 @@ export function PersonalStatistics() {
         }
 
         setStats(data);
-        */
+    
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Something went wrong."
@@ -73,8 +56,12 @@ export function PersonalStatistics() {
       }
     }
 
-    fetchStatistics();
-  }, []);
+    if (user) {
+      fetchStatistics();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   if (loading) {
     return (

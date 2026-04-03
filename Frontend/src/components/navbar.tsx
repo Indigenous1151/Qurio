@@ -14,6 +14,10 @@ export const Navbar = () => {
                 <li>|</li>
                 <li><Link to="/UpdatePublicInformation">Update Public Information</Link></li>
                 <li>|</li>
+                <li><Link to="/view-friend-list">Friend List</Link></li>
+                <li>|</li>
+                <li><Link to="/groups">Groups</Link></li>
+                <li>|</li>
                 <li><Link to="/personal-statistics">PersonalStatistics</Link></li>
                 <li>|</li>
                 <li><Link to="/logout">Logout</Link></li>
