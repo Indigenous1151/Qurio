@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../details/Groups.css";
+import { supabase } from '../supabaseClient/supabaseClient';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 type Member = {
-  id: string;
+  user_id: string;
   username: string;
 };
 
@@ -11,26 +14,44 @@ export function GroupDetails() {
   const { groupId } = useParams();
   const navigate = useNavigate();
 
-  const [members, setMembers] = useState<Member[]>([
-    { id: "1", username: "ashley" },
-    { id: "2", username: "user4432" },
-    { id: "3", username: "user0384" },
-  ]);
-
+  const [group, setGroup] = useState<any>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [inviteUsername, setInviteUsername] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const group = useMemo(() => {
-    // TODO: Replace with backend fetch using groupId
-    return {
-      id: groupId ?? "",
-      name: "Sample Group",
-      description: "This is where your group details will appear.",
-    };
+  useEffect(() => {
+    async function fetchUser() {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) setUserId(data.user.id);
+    }
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (!groupId) return;
+    async function fetchGroup() {
+      try {
+        const res = await fetch(`${API_URL}/group/${groupId}`);
+        const data = await res.json();
+        if (res.ok) {
+          setGroup(data.group);
+          // fetch usernames for members
+          const { data: profiles } = await supabase
+            .from("public_profile")
+            .select("user_id, username")
+            .in("user_id", data.group.members);
+          setMembers(profiles || []);
+        }
+      } catch (err) {
+        console.error("Error fetching group:", err);
+      }
+    }
+    fetchGroup();
   }, [groupId]);
 
-  const handleInviteUser = (e: React.FormEvent) => {
+  const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
     setError("");
@@ -40,19 +61,53 @@ export function GroupDetails() {
       return;
     }
 
-    // TODO: Replace with backend call
+    try {
+      const res = await fetch(`${API_URL}/group/invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        },
+        body: JSON.stringify({
+          group_id: groupId,
+          username: inviteUsername
+        })
+      });
 
-    setMessage(`Invitation sent to "${inviteUsername}".`);
-    setInviteUsername("");
+      const data = await res.json();
+      if (res.ok) {
+        setMessage(`Invitation sent to "${inviteUsername}".`);
+        setInviteUsername("");
+      } else {
+        setError(data.error || "Failed to send invite.");
+      }
+    } catch (err) {
+      setError("Failed to send invite.");
+    }
   };
 
-  const handleLeaveGroup = () => {
+  const handleLeaveGroup = async () => {
     setMessage("");
     setError("");
 
-    // TODO: Replace with backend call
+    try {
+      const res = await fetch(`${API_URL}/group/leave`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        },
+        body: JSON.stringify({ group_id: groupId })
+      });
 
-    navigate("/groups");
+      if (res.ok) {
+        navigate("/groups");
+      } else {
+        setError("Failed to leave group.");
+      }
+    } catch (err) {
+      setError("Failed to leave group.");
+    }
   };
 
   return (
@@ -62,8 +117,11 @@ export function GroupDetails() {
           <button className="back-btn" onClick={() => navigate("/groups")}>
             ← Back to Groups
           </button>
-          <h1>{group.name}</h1>
-          <p>{group.description}</p>
+          <h1>{group?.group_name || "Loading..."}</h1>
+          <p>{group?.description || ""}</p>
+          {group?.invite_code && (
+            <p>Invite Code: <strong>{group.invite_code}</strong></p>
+          )}
         </div>
 
         {message && <div className="groups-alert success">{message}</div>}
@@ -77,7 +135,7 @@ export function GroupDetails() {
             ) : (
               <div className="member-list">
                 {members.map((member) => (
-                  <div key={member.id} className="member-item">
+                  <div key={member.user_id} className="member-item">
                     {member.username}
                   </div>
                 ))}

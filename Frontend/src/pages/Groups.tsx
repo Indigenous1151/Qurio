@@ -1,61 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
 import "../details/Groups.css";
+import { supabase } from '../supabaseClient/supabaseClient';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 type Group = {
-  id: string;
-  name: string;
+  group_id: string;
+  group_name: string;
   description?: string;
-  memberCount: number;
-};
-
-type GroupInvite = {
-  id: string;
-  groupId: string;
-  groupName: string;
-  invitedBy: string;
+  members: string[];
+  invite_code: string;
 };
 
 export function Groups() {
   const navigate = useNavigate();
 
-  const [groups, setGroups] = useState<Group[]>([
-    {
-      id: "1",
-      name: "testgroup1",
-      description: "Trivia group description here.",
-      memberCount: 5,
-    },
-    {
-      id: "2",
-      name: "trivia group!",
-      description: "group description",
-      memberCount: 4,
-    },
-  ]);
-
-  const [pendingInvites, setPendingInvites] = useState<GroupInvite[]>([
-    {
-      id: "101",
-      groupId: "3",
-      groupName: "Trivia",
-      invitedBy: "ashley",
-    },
-    {
-      id: "102",
-      groupId: "4",
-      groupName: "General Knowledge ",
-      invitedBy: "users8392808",
-    },
-  ]);
-
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
-
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -64,7 +32,43 @@ export function Groups() {
     setError("");
   };
 
-  const handleJoinByCode = (e: React.FormEvent) => {
+  // get logged in user
+  useEffect(() => {
+    async function fetchUser() {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) setUserId(data.user.id);
+    }
+    fetchUser();
+}, []);
+
+  // fetch user groups on load
+  useEffect(() => {
+    if (!userId) return;
+    fetchUserGroups();
+  }, [userId]);
+
+  const fetchUserGroups = async () => {
+    try {
+      const res = await fetch(`${API_URL}/group/my-groups`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setGroups(data.groups);
+      } else {
+        setError("Failed to load groups.");
+      }
+    } catch (err) {
+      console.error("Error fetching groups:", err);
+      setError("Failed to load groups.");
+    }
+  };
+
+  const handleJoinByCode = async (e: React.FormEvent) => {
     e.preventDefault();
     clearFeedback();
 
@@ -73,15 +77,30 @@ export function Groups() {
       return;
     }
 
-    // TODO: Replace with backend call
-    // Example:
-    // await fetch("/api/groups/join", { method: "POST", body: JSON.stringify({ code: joinCode }) })
+    try {
+      const res = await fetch(`${API_URL}/group/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        },
+        body: JSON.stringify({ invite_code: joinCode })
+      });
 
-    setMessage(`Successfully requested to join group with code "${joinCode}".`);
-    setJoinCode("");
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("Successfully joined group!");
+        setJoinCode("");
+        fetchUserGroups();
+      } else {
+        setError(data.error || "Failed to join group.");
+      }
+    } catch (err) {
+      setError("Failed to join group.");
+    }
   };
 
-  const handleCreateGroup = (e: React.FormEvent) => {
+  const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     clearFeedback();
 
@@ -90,46 +109,32 @@ export function Groups() {
       return;
     }
 
-    const createdGroup: Group = {
-      id: Date.now().toString(),
-      name: newGroupName,
-      description: newGroupDescription,
-      memberCount: 1,
-    };
+    try {
+      const res = await fetch(`${API_URL}/group/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        },
+        body: JSON.stringify({
+          group_name: newGroupName,
+          description: newGroupDescription
+        })
+      });
 
-    // TODO: Replace with backend call
-
-    setGroups((prev) => [createdGroup, ...prev]);
-    setMessage(`Group "${newGroupName}" created successfully.`);
-    setNewGroupName("");
-    setNewGroupDescription("");
-    setShowCreateForm(false);
-  };
-
-  const handleAcceptInvite = (invite: GroupInvite) => {
-    clearFeedback();
-
-    const joinedGroup: Group = {
-      id: invite.groupId,
-      name: invite.groupName,
-      description: "Joined from invitation.",
-      memberCount: 1,
-    };
-
-    // TODO: Replace with backend call
-
-    setGroups((prev) => [joinedGroup, ...prev]);
-    setPendingInvites((prev) => prev.filter((i) => i.id !== invite.id));
-    setMessage(`You joined "${invite.groupName}".`);
-  };
-
-  const handleDeclineInvite = (inviteId: string) => {
-    clearFeedback();
-
-    // TODO: Replace with backend call
-
-    setPendingInvites((prev) => prev.filter((invite) => invite.id !== inviteId));
-    setMessage("Invitation declined.");
+      const data = await res.json();
+       if (res.ok) {
+        setMessage(`Group "${newGroupName}" created successfully!`);
+        setNewGroupName("");
+        setNewGroupDescription("");
+        setShowCreateForm(false);
+        fetchUserGroups(); // refresh list from backend
+    } else {
+        setError(data.error || "Failed to create group.");
+      }
+    } catch (err) {
+      setError("Failed to create group.");
+    }
   };
 
   return (
@@ -139,32 +144,33 @@ export function Groups() {
         <div className="groups-container">
           <div className="groups-header">
             <h1>Groups</h1>
-            <p>Manage your groups, invitations, and create new ones here.</p>
+            <p>Manage your groups and create new ones here.</p>
           </div>
 
           {message && <div className="groups-alert success">{message}</div>}
           {error && <div className="groups-alert error">{error}</div>}
 
           <div className="groups-grid">
+
+            {/* My Groups */}
             <section className="groups-card">
               <div className="card-header-row">
                 <h2>My Groups</h2>
               </div>
-
               {groups.length === 0 ? (
                 <p className="empty-text">You have not joined any groups yet.</p>
               ) : (
                 <div className="group-list">
                   {groups.map((group) => (
-                    <div key={group.id} className="group-item">
+                    <div key={group.group_id} className="group-item">
                       <div>
-                        <h3>{group.name}</h3>
+                        <h3>{group.group_name}</h3>
                         <p>{group.description || "No description provided."}</p>
-                        <span>{group.memberCount} members</span>
+                        <span>{group.members.length} members</span>
                       </div>
                       <button
                         className="secondary-btn"
-                        onClick={() => navigate(`/groups/${group.id}`)}
+                        onClick={() => navigate(`/groups/${group.group_id}`)}
                       >
                         View
                       </button>
@@ -174,39 +180,7 @@ export function Groups() {
               )}
             </section>
 
-            <section className="groups-card">
-              <h2>Pending Invitations</h2>
-
-              {pendingInvites.length === 0 ? (
-                <p className="empty-text">You have no pending invitations.</p>
-              ) : (
-                <div className="invite-list">
-                  {pendingInvites.map((invite) => (
-                    <div key={invite.id} className="invite-item">
-                      <div>
-                        <h3>{invite.groupName}</h3>
-                        <p>Invited by: {invite.invitedBy}</p>
-                      </div>
-                      <div className="invite-actions">
-                        <button
-                          className="primary-btn"
-                          onClick={() => handleAcceptInvite(invite)}
-                        >
-                          Accept
-                        </button>
-                        <button
-                          className="secondary-btn"
-                          onClick={() => handleDeclineInvite(invite.id)}
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
+            {/* Join Group */}
             <section className="groups-card">
               <h2>Join a Group</h2>
               <form onSubmit={handleJoinByCode} className="group-form">
@@ -224,6 +198,7 @@ export function Groups() {
               </form>
             </section>
 
+            {/* Create Group */}
             <section className="groups-card">
               <div className="card-header-row">
                 <h2>Create a Group</h2>
@@ -284,6 +259,7 @@ export function Groups() {
                 </p>
               )}
             </section>
+
           </div>
         </div>
       </div>
