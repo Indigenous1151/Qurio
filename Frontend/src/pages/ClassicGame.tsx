@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
+import { supabase } from "../client/supabase";
 
+// Mappings to display for menu options
 const CATEGORIES = [
   { id: 9, name: "General Knowledge" },
   { id: 10, name: "Books" },
@@ -30,6 +33,41 @@ export function ClassicGame() {
   const [category, setCategory] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [count, setCount] = useState(10);
+
+  const hasFetched = useRef(false);
+
+  // Check for active game before creating new one.
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    const checkServerForActiveGame = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/active`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (data.active) {
+        console.log("Found active game on server: ", data.game_id);
+        // TODO: jump to TriviaGame instead of having the user create a new game
+      } else {
+        console.log("No active game found, configuring new game");
+      }
+    };
+
+    checkServerForActiveGame();
+
+    // Clear the location state after using it to prevent it from persisting on refresh
+    // if (location.state) {
+    //   window.history.replaceState(null, '', window.location.pathname);
+    // }
+  }, []);
 
   const handleStart = () => {
     navigate("/game/play", {
