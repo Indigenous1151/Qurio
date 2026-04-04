@@ -15,10 +15,19 @@ type Group = {
   invite_code: string;
 };
 
+type GroupInvite = {
+  invite_id: string;
+  group_id: string;
+  status: string;
+  groups: { group_name: string };
+  invited_by: string;
+};
+
 export function Groups() {
   const navigate = useNavigate();
 
   const [groups, setGroups] = useState<Group[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<GroupInvite[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
@@ -32,19 +41,18 @@ export function Groups() {
     setError("");
   };
 
-  // get logged in user
   useEffect(() => {
     async function fetchUser() {
-        const { data } = await supabase.auth.getUser();
-        if (data?.user) setUserId(data.user.id);
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) setUserId(data.user.id);
     }
     fetchUser();
-}, []);
+  }, []);
 
-  // fetch user groups on load
   useEffect(() => {
     if (!userId) return;
     fetchUserGroups();
+    fetchPendingInvites();
   }, [userId]);
 
   const fetchUserGroups = async () => {
@@ -65,6 +73,18 @@ export function Groups() {
     } catch (err) {
       console.error("Error fetching groups:", err);
       setError("Failed to load groups.");
+    }
+  };
+
+  const fetchPendingInvites = async () => {
+    try {
+      const res = await fetch(`${API_URL}/group/pending-invites`, {
+        headers: { "X-User-Id": userId as string }
+      });
+      const data = await res.json();
+      if (res.ok) setPendingInvites(data.pending_invites);
+    } catch (err) {
+      console.error("Error fetching invites:", err);
     }
   };
 
@@ -123,17 +143,60 @@ export function Groups() {
       });
 
       const data = await res.json();
-       if (res.ok) {
+      if (res.ok) {
         setMessage(`Group "${newGroupName}" created successfully!`);
         setNewGroupName("");
         setNewGroupDescription("");
         setShowCreateForm(false);
-        fetchUserGroups(); // refresh list from backend
-    } else {
+        fetchUserGroups();
+      } else {
         setError(data.error || "Failed to create group.");
       }
     } catch (err) {
       setError("Failed to create group.");
+    }
+  };
+
+  const handleAcceptInvite = async (invite_id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/group/accept-invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        },
+        body: JSON.stringify({ invite_id })
+      });
+      if (res.ok) {
+        setMessage("Joined group successfully!");
+        fetchUserGroups();
+        fetchPendingInvites();
+      } else {
+        setError("Failed to accept invite.");
+      }
+    } catch (err) {
+      setError("Failed to accept invite.");
+    }
+  };
+
+  const handleDeclineInvite = async (invite_id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/group/decline-invite`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        },
+        body: JSON.stringify({ invite_id })
+      });
+      if (res.ok) {
+        setMessage("Invite declined.");
+        fetchPendingInvites();
+      } else {
+        setError("Failed to decline invite.");
+      }
+    } catch (err) {
+      setError("Failed to decline invite.");
     }
   };
 
@@ -174,6 +237,39 @@ export function Groups() {
                       >
                         View
                       </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Pending Invitations */}
+            <section className="groups-card">
+              <h2>Pending Invitations</h2>
+              {pendingInvites.length === 0 ? (
+                <p className="empty-text">You have no pending invitations.</p>
+              ) : (
+                <div className="invite-list">
+                  {pendingInvites.map((invite) => (
+                    <div key={invite.invite_id} className="invite-item">
+                      <div>
+                        <h3>{invite.groups?.group_name}</h3>
+                        <p>Invited by: {invite.invited_by}</p>
+                      </div>
+                      <div className="invite-actions">
+                        <button
+                          className="primary-btn"
+                          onClick={() => handleAcceptInvite(invite.invite_id)}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="secondary-btn"
+                          onClick={() => handleDeclineInvite(invite.invite_id)}
+                        >
+                          Decline
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
