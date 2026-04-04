@@ -10,6 +10,7 @@ interface Question {
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
+  removed_answers: string[];
   type: string;
   difficulty: string;
   category: string;
@@ -28,154 +29,372 @@ function shuffleArray(arr: string[]) {
 export function TriviaGame() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { category, difficulty, count, isDaily } =location.state|| {};
-console.log("Game state:", location.state);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [current, setCurrent] = useState(0);
-  const [options, setOptions] = useState<string[]>([]);
+  const { category, difficulty, count, isDaily, continueGameId } = location.state || {};
+  console.log("Game state:", location.state);
   const [selected, setSelected] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
-  const [skipped, setSkipped] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [answered, setAnswered] = useState(false);
+  const [gameState, setGameState] = useState<null | {
+    gameId: string;
+    currentQuestion: Question;
+    currentIndex: number;
+    score: number;
+    skipped: number;
+    hintsUsed: number;
+    totalQuestions: number;
+    options: string[];
+  }>(null);
 
-  const hasFetched = useRef(false); 
-useEffect(() => { 
-  if (hasFetched.current) return;
-  hasFetched.current = true;
-  fetchQuestions(); 
-}, []);
+  const hasFetched = useRef(false);
 
+  const continueGame = async (existingGameId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
 
-const handleSkip = () => {
-  if (answered) return;
-  const newSkipped = skipped + 1;
-  setSkipped(newSkipped);
-  if (current + 1 >= questions.length) {
-    
-    //to save result when skipping last question
-    const saveResult = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await fetch("/game/result", {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-User-Id': user.id
-            },
-            body: JSON.stringify({
-    score: score,
-    total: questions.length,
-    skipped: newSkipped,
-    hints_used: 0,  // should be updated when hints feature is implemented
-    category: questions[0]?.category || "",
-    difficulty: difficulty || "any",
-    is_daily: isDaily
-})
-          });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/continue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ game_id: existingGameId })
+      });
+
+      if (!res.ok) {
+        sessionStorage.removeItem('activeGameId');
+        startGame();
+        return;
+      }
+
+      const data = await res.json();
+      if (data.end) {
+        await endGame();
+        return;
+      }
+
+      const availableIncorrect = data.question.incorrect_answers.filter(
+        (opt: string) => !data.question.removed_answers.includes(opt)
+      );
+
+      const game = {
+        gameId: data.game_id,
+        currentQuestion: data.question,
+        currentIndex: data.current_index,
+        score: data.score,
+        skipped: data.skipped,
+        hintsUsed: data.hints_used,
+        totalQuestions: data.total_questions,
+        options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
+      };
+
+      setGameState(game);
+      setLoading(false);
+      setSelected(null);
+      setAnswered(false);
+      sessionStorage.setItem('activeGameId', data.game_id);
+
+    } catch (err) {
+      console.error('Error in continueGame:', err);
+      startGame();
+    }
+  };
+
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    const checkServerForActiveGame = async () => {
+      // If routing requests a continueGameId from ClassicGame, use it immediately
+      if (continueGameId) {
+        console.log("continueGameId found in state:", continueGameId);
+        continueGame(continueGameId);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return startGame();
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/active`, {
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
         }
-      } catch (err) {
-        console.error("Failed to save result:", err);
+      });
+
+      const data = await res.json();
+
+      if (data.active) {
+        console.log("Found active game on server: ", data.game_id);
+        continueGame(data.game_id);
+      } else {
+        console.log("No active game found, starting new game");
+        startGame();
       }
     };
-    saveResult();
 
-    navigate("/game/score", {
-      state: { score, total: questions.length, skipped: newSkipped, isDaily },
-    });
-  } else {
-    setCurrent((c) => c + 1);
-  }
-};
+    checkServerForActiveGame();
+
+    // Clear the location state after using it to prevent it from persisting on refresh
+    if (location.state) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [continueGameId]);
+
+
+  const handleSkip = async () => {
+    if (answered || !gameState) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/skip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ game_id: gameState.gameId })
+      });
+      if (!res.ok) throw new Error('Skip failed');
+      const skipData = await res.json();
+      setGameState(prev => prev ? { ...prev, skipped: skipData.skipped } : null);
+      await fetchCurrentQuestion();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   
   useEffect(() => {
-    if (questions.length > 0 && current < questions.length) {
-      const q = questions[current];
-      setOptions(shuffleArray([q.correct_answer, ...q.incorrect_answers]));
+    if (gameState) {
       setSelected(null);
       setAnswered(false);
     }
-  }, [current, questions]);
+  }, [gameState?.currentIndex]);
 
-  const fetchQuestions = async () => {
+  useEffect(() => {
+    if (gameState?.gameId) {
+      fetchCurrentQuestion();
+    }
+  }, [gameState?.gameId]);
+
+  const startGame = async () => {
+    console.log("Starting game...");
     try {
       setLoading(true);
-      let url = `https://opentdb.com/api.php?amount=${count || 10}&type=multiple`;
-      if (category) url += `&category=${category}`;
-      if (difficulty) url += `&difficulty=${difficulty}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.response_code === 0) {
-        setQuestions(data.results);
-      } else {
-        setError("Could not load questions. Try different settings.");
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Session:", session);
+      if (!session?.access_token) {
+        setError("User not authenticated");
+        return;
       }
-    } catch {
-      setError("Failed to connect to trivia API.");
+      const endpoint = isDaily ? '/game/daily' : '/game/classic';
+      console.log("Calling endpoint:", endpoint);
+      const url = `${import.meta.env.VITE_API_URL}${endpoint}`;
+      console.log("Full URL:", url);
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          category: category,
+          difficulty: difficulty,
+          count: count
+        })
+      });
+      console.log("Response status:", res.status);
+      if (!res.ok) throw new Error('Failed to start game');
+      const data = await res.json();
+
+      console.log("Start game data:", data);
+      sessionStorage.setItem('activeGameId', data.game_id);
+      console.log("Game ID set to:", data.game_id);
+      const availableIncorrect = data.question.incorrect_answers.filter(
+        (opt: string) => !data.question.removed_answers.includes(opt)
+      );
+      setGameState({
+        gameId: data.game_id,
+        currentQuestion: data.question,
+        currentIndex: data.current_index,
+        score: data.score,
+        skipped: data.skipped,
+        hintsUsed: data.hints_used,
+        totalQuestions: data.total_questions,
+        options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
+      });
+      setSelected(null);
+      setAnswered(false);
+    } catch (err) {
+      console.error("Error in startGame:", err);
+      setError("Failed to start game.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAnswer = (option: string) => {
-    if (answered) return;
-    setSelected(option);
-    setAnswered(true);
-    if (option === questions[current].correct_answer) {
-      setScore((s) => s + 1);
+  const fetchCurrentQuestion = async (overrideGameId?: string) => {
+    const activeId = overrideGameId || gameState?.gameId;
+    console.log("Fetching current question, gameId:", activeId);
+    if (!activeId) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/current-question`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ game_id: activeId })
+      });
+      console.log("Current question response status:", res.status);
+      if (!res.ok) throw new Error('Failed to fetch question');
+      const data = await res.json();
+      console.log("Current question data:", data);
+      if (data.end) {
+        // Game over
+        await endGame();
+        return;
+      }
+      const availableIncorrect = data.question.incorrect_answers.filter(
+        (opt: string) => !data.question.removed_answers.includes(opt)
+      );
+      setGameState(prev => prev ? {
+        ...prev,
+        currentQuestion: data.question,
+        currentIndex: data.current_index,
+        score: data.score,
+        skipped: data.skipped,
+        hintsUsed: data.hints_used,
+        options: shuffleArray([data.question.correct_answer, ...availableIncorrect])
+      } : null);
+    } catch (err) {
+      console.error("Error in fetchCurrentQuestion:", err);
+      setError("Failed to fetch question.");
     }
   };
 
-  const handleNext = () => {
-    console.log("handleNext called, current:", current, "total:", questions.length);
-    if (current + 1 >= questions.length) {
-    console.log("Game over, saving result...");
-    const saveResult = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("User:", user);
+  const endGame = async () => {
+    if (!gameState) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
 
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/end`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ game_id: gameState.gameId })
+      });
 
-  
-    
-   
-    
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        console.log("User in saveResult:", user);
-        if (user) {
-          await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-User-Id': user.id
-            },
-            body: JSON.stringify({
-              score: score,
-              total: questions.length,
-              skipped: skipped,
-              category: questions[0]?.category || "",
-              difficulty: difficulty || "any",
-              is_daily: isDaily
-            })
-          });
-        }
-      } catch (err) {
-        console.error("Failed to save result:", err);
+      if (!res.ok) throw new Error('End game failed');
+      const result = await res.json();
+
+      // Now save result
+      await fetch(`${import.meta.env.VITE_API_URL}/game/result`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          score: result.score,
+          total: result.total_questions,
+          skipped: result.skipped || gameState.skipped,
+          hints_used: result.hints_used || gameState.hintsUsed,
+          category: gameState.currentQuestion?.category || "",
+          difficulty: difficulty || "any",
+          is_daily: isDaily
+        })
+      });
+      sessionStorage.removeItem('activeGameId');
+      navigate("/game/score", {
+        state: {
+          score: result.score,
+          total: result.total_questions,
+          skipped: result.skipped ?? gameState.skipped,
+          isDaily },
+      });
+    } catch (err) {
+      console.error("Failed to end game:", err);
+    }
+  };
+
+  const handleAnswer = async (option: string) => {
+    if (answered || !gameState) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/answer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ game_id: gameState.gameId, answer: option })
+      });
+      if (!res.ok) throw new Error('Answer failed');
+      const data = await res.json();
+
+      setSelected(option);
+      setAnswered(true);
+      if (data.correct) {
+        setGameState(prev => prev ? { ...prev, score: prev.score + 1 } : null);
       }
-    };
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    saveResult();
+  const handleHint = async () => {
+    console.log("DEBUG: In handleHint")
+    // check if hint is necessary
+    if (answered || !gameState) {
+      console.log("DEBUG: In handleHint", { gameState, answered });
+      return;
+    }
+    console.log("DEBUG: debug is necessary")
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Session in hint:", session);
+      if (!session?.access_token) return;
+      console.log("not session passed");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/game/hint`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ game_id: gameState.gameId })
+      });
 
-    navigate("/game/score", {
-      state: { score, total: questions.length, skipped, isDaily },
-    });
-  } else {
-    setCurrent((c) => c + 1);
-  }
-};
+      if (!res.ok) throw new Error('Hint failed');
+      const q = await res.json(); // updated question from backend
+      console.log("HINT RESPONSE:", q);
+      console.log("Removed answers:", q.removed_answers);
+      const availableIncorrect = q.incorrect_answers.filter(
+        (opt) => !q.removed_answers.includes(opt)
+      );
+      console.log("AvailableIncorrect" + availableIncorrect);
+      setGameState(prev => prev ? {
+        ...prev,
+        currentQuestion: q,
+        hintsUsed: prev.hintsUsed + 1,
+        options: shuffleArray([q.correct_answer, ...availableIncorrect])
+      } : null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleNext = async () => {
+    console.log("handleNext called");
+    await fetchCurrentQuestion();
+  };
   
 
   if (loading) return (
@@ -204,8 +423,18 @@ const handleSkip = () => {
     </div>
   );
 
-  const q = questions[current];
-  const progress = Math.round((current / questions.length) * 100);
+  if (!gameState) return (
+    <div className="min-h-screen bg-[#f5f0e8]">
+      <Navbar />
+      <div className="flex justify-center items-center h-64">
+        <p className="text-[#638F77] text-lg font-semibold">Loading question...</p>
+      </div>
+      <Footer />
+    </div>
+  );
+
+  const q = gameState.currentQuestion;
+  const progress = Math.round(((gameState.currentIndex + 1) / gameState.totalQuestions) * 100);
 
   const diffColor: Record<string, string> = {
     easy: "text-green-700 bg-green-100",
@@ -226,8 +455,8 @@ const handleSkip = () => {
 
           
           <div className="flex justify-between items-center text-white text-sm">
-            <span className="font-semibold">Question {current + 1} of {questions.length}</span>
-            <span className="font-semibold">Score: {score}</span>
+            <span className="font-semibold">Question {gameState.currentIndex + 1} of {gameState.totalQuestions}</span>
+            <span className="font-semibold">Score: {gameState.score}</span>
           </div>
 
          
@@ -253,7 +482,7 @@ const handleSkip = () => {
 
          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {options.map((opt, i) => {
+            {gameState.options.map((opt, i) => {
               let cls = "w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2 transition-all cursor-pointer border-none ";
               if (!answered) {
                 cls+= "bg-white text-[#1a1a1a] hover:bg-gray-100";
@@ -278,7 +507,8 @@ const handleSkip = () => {
             {!answered ? (
               <>
                 <button
-                  onClick={() => console.log("Hint clicked")} //TODO: update with hint logic once implemented
+                  onClick={handleHint}
+                  disabled={answered}
                   className="px-5 py-2 rounded-lg text-sm text-white border border-white/50 bg-transparent hover:bg-white/10 cursor-pointer"
                 >
                   Hint
@@ -297,7 +527,7 @@ const handleSkip = () => {
                   onClick={handleNext}
                   className="px-6 py-2 rounded-lg text-sm font-bold bg-white text-[#638F77] hover:bg-gray-100 cursor-pointer border-none"
                 >
-                  {current + 1 >= questions.length ? "See Results" : "Next"}
+                  {gameState.currentIndex + 1 >= gameState.totalQuestions ? "See Results" : "Next"}
                 </button>
               </div>
             )}

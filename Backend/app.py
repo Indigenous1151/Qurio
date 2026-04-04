@@ -3,6 +3,9 @@ load_dotenv(dotenv_path='.env', verbose=True)
 from flask import Flask
 
 import os
+import jwt
+from jwt import PyJWKClient
+import requests
 from flask_cors import CORS
 from database.MongoDBClient import MongoDBClient
 from database.SupabaseClient import SupabaseClient
@@ -29,15 +32,33 @@ from FriendRepository import FriendRepository
 app = Flask(__name__)
 CORS(app, 
      resources={r"/*": {"origins": "http://localhost:5173"}},
-     allow_headers=["Content-Type", "X-User-Id"],
+     allow_headers="*",
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      supports_credentials=True)
 
+# Setup JWKS client for JWT verification
+supabase_url = os.getenv("SUPABASE_URL")
+jwks_url = f"{supabase_url}/auth/v1/.well-known/jwks.json"
+jwk_client = PyJWKClient(jwks_url)
+
+def get_user_id_from_request(request):
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None
+    token = auth_header.replace('Bearer ', '')
+    try:
+        signing_key = jwk_client.get_signing_key_from_jwt(token)
+        payload = jwt.decode(token, signing_key.key, algorithms=['ES256'], audience='authenticated')
+        return payload['sub']
+    except Exception as e:
+        print(f"JWT decode error: {e}")
+        return None
+
 supabase = SupabaseClient(
-    url=os.getenv("SUPABASE_URL"),
-    key=os.getenv("SUPABASE_SECRET_KEY")
+    url=os.getenv("SUPABASE_URL", ""),
+    key=os.getenv("SUPABASE_SECRET_KEY", "")
 )
-print(f"Key: {os.getenv('SUPABASE_SECRET_KEY')[:30]}")
+print(f"Key: {os.getenv('SUPABASE_SECRET_KEY', "")[:30]}")
 mongo = MongoDBClient()
 #Database connections
 supabase.connect()
@@ -66,9 +87,9 @@ game_service = GameService(
 )
 
 # Controller Creation
-UserController(service=user_service)
-AuthController(service=auth_service)
-GameController(game_service = game_service)
+UserController(service=user_service, get_user_id_func=get_user_id_from_request)
+AuthController(service=auth_service, get_user_id_func=get_user_id_from_request)
+GameController(game_service=game_service, get_user_id_func=get_user_id_from_request)
 FriendController(service=friend_service)
 GroupController(service=group_service)
 

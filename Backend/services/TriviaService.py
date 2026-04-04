@@ -3,6 +3,25 @@ import requests
 class TriviaService:
     BASE_URL = "https://opentdb.com/api.php"
 
+    # CATEGORY_MAPPING
+    #     "General Knowledge": 9,
+    #     "Books": 10,
+    #     "Film": 11,
+    #     "Music": 12,
+    #     "Television": 14,
+    #     "Video Games": 15,
+    #     "Science & Nature": 17,
+    #     "Computers": 18,
+    #     "Mathematics": 19,
+    #     "Mythology": 20,
+    #     "Sports": 21,
+    #     "Geography": 22,
+    #     "History": 23,
+    #     "Politics": 24,
+    #     "Art": 25,
+    #     "Animals": 27,
+    #
+
     def fetch_questions(self, amount=10, category=None, difficulty=None):
         #default number of questions will be 10 (if not specified by the user)
         params = {
@@ -10,7 +29,7 @@ class TriviaService:
             "type": "multiple"
         }
         if category:
-            params["category"]= category
+            params["category"] = category
         if difficulty:
             params["difficulty"] = difficulty
 
