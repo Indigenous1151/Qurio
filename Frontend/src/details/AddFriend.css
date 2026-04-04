@@ -1,0 +1,37 @@
+.enter-info-box {
+    background-color: #638F77;
+    font-size: 18px;
+    border-radius: 10px;
+    height: 400px;
+    width: 900px;
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start;
+    align-items: center; 
+    margin: 0 auto; 
+    margin-top: 0px;       
+    padding-top: 50px;  
+}
+
+.enter-info-small-box{
+    color: white;
+    height: 30px;
+}
+.update-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: white;
+    color: #638F77;
+    font-weight: bold;
+    font-size: 0.875rem; 
+    padding: 0.625rem 10rem;
+    border-radius: 9999px;
+    border: none;
+}
+
+.instruction-text {
+  color: white;
+  font-size: 26px;
+  padding-bottom: 15px;
+}
