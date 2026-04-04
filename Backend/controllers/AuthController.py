@@ -6,8 +6,9 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 class AuthController:
 
-    def __init__(self, service: AuthService):
+    def __init__(self, service: AuthService, get_user_id_func):
         self.__service = service
+        self.get_user_id = get_user_id_func
         self.__register_routes()
 
     def __register_routes(self):
@@ -67,12 +68,12 @@ class AuthController:
 
     def sign_out(self):
         try:
-            user_id = request.headers.get("X-User-Id")
+            user_id = self.get_user_id(request)
 
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
-            self.__service.signout()
+            self.__service.sign_out()
 
             return jsonify({"message": "Logged out successfully"}), HttpStatus.OK
         except Exception as e:

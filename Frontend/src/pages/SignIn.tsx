@@ -27,7 +27,7 @@ export function SignIn() {
     try {
       setIsLoading(true);
 
-      const response = await fetch("http://127.0.0.1:5000/auth/login", {
+      const response = await fetch("http://127.0.0.1:5001/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,6 +71,11 @@ export function SignIn() {
   };
 
   return (
+    <div>
+      <div className="absolute top-[-150px] right-[8%] w-96 md:w-[32rem] h-96 md:h-[32rem] rounded-full bg-[#638F77] opacity-10 pointer-events-none z-0" />
+      <div className="absolute top-18%] left-[-100px] w-64 md:w-[22rem] h-64 md:h-[22rem] rounded-full bg-[#638F77] opacity-10 pointer-events-none z-0" />
+      <div className="absolute bottom-[-140px] left-[18%] w-80 md:w-[26rem] h-80 md:h-[26rem] rounded-full bg-[#638F77] opacity-10 pointer-events-none z-0" />
+      <div className="absolute bottom-[22%] right-[-2%] w-36 md:w-52 h-36 md:h-52 rounded-full bg-[#638F77] opacity-10 pointer-events-none z-0" />
     <AuthLayout>
       <div className="auth-form-container">
         <p className="auth-top-text">
@@ -112,5 +117,6 @@ export function SignIn() {
         </form>
       </div>
     </AuthLayout>
+    </div>
   );
 }
