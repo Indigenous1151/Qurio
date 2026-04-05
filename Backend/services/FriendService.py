@@ -12,7 +12,7 @@ class FriendService:
     
     def send_friend_request(self, sender_id: str, receiver_id: str) -> bool:
         request = FriendRequest(sender_id=sender_id, receiver_id=receiver_id)
-        request.status = "accepted"  # auto accept
+        request.status = "pending"  # auto accept - we dont want this to auto accept
         return self.__friend_repo.save_request(request)
 
     def accept_friend_request(self, sender_id: str, receiver_id: str) -> bool:
