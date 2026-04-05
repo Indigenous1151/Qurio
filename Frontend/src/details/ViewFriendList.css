@@ -67,3 +67,29 @@
   display: flex;
   gap: 30px;
 }
+
+.friend-requests-container {
+  border: 10px solid #638F77; /* greenish border */
+  border-radius: 12px;   
+  padding: 16px;              /* inner spacing */
+  margin: 20px auto;          /* spacing from other sections */
+  max-width: 100%;           /* optional: limit width */
+  background-color: rgb(240, 238, 238);  /* subtle background */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* subtle shadow */
+}
+
+.friend-requests-container .friend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-bottom: 1px solid #ddd; /* optional separator between rows */
+}
+
+.friend-list-title{
+  font-size: 30px;
+  color:black;
+  font-weight: bold;
+  margin-bottom: 10px;
+}

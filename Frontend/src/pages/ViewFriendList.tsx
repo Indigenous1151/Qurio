@@ -282,6 +282,10 @@ async function declineFriend(senderId: string, requestId: string) {
             <br></br>
         </div>
 
+      <div className = "friend-requests-container">
+        <div className="friend-list-title">
+          Pending Friend Requests
+        </div>        
         <div className="friend-list">
          {pendingFriends.length === 0 ? (
             <p className="no-friends-message">
@@ -312,7 +316,12 @@ async function declineFriend(senderId: string, requestId: string) {
             })
           )}
         </div>
-
+      </div>
+        
+      <div className = "friend-requests-container">
+        <div className="friend-list-title">
+        Your Friends
+        </div>
         <div className="friend-list">
          {acceptedFriends.length === 0 ? (
             <p className="no-friends-message">
@@ -336,6 +345,7 @@ async function declineFriend(senderId: string, requestId: string) {
             })
           )}
         </div>
+      </div>
 
       <Footer/>
     </div>
