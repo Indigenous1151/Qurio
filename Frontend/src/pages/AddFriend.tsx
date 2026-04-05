@@ -10,49 +10,48 @@ export function AddFriend(){
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!receiverId) {
-      setMessage("Please enter a friend's user ID.");
+  if (!receiverId) {
+    setMessage("Please enter a friend's user ID.");
+    return;
+  }
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setMessage("You must be logged in to add friends.");
       return;
     }
 
-    try {
-      // Get currently logged-in user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setMessage("You must be logged in to add friends.");
-        return;
-      }
-
-      if (receiverId === user.id) {
-        setMessage("You cannot add yourself as a friend.");
-        return;
-      }
-
-      const response = await fetch("http://localhost:5000/friend/request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": user.id
-        },
-        body: JSON.stringify({ receiver_id: receiverId })
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        setMessage("Failed to send friend request: " + err);
-        return;
-      }
-
-      setMessage("Friend request sent successfully!");
-      setReceiverId("");
-
-    } catch (err) {
-      console.error("Error sending friend request:", err);
-      setMessage("An unexpected error occurred.");
+    if (receiverId === user.id) {
+      setMessage("You cannot add yourself as a friend.");
+      return;
     }
+
+    const response = await fetch("http://localhost:5001/friend/request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-User-Id": user.id
+      },
+      body: JSON.stringify({ receiver_id: receiverId })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setMessage(data.message || "Friend request sent successfully!");
+      setReceiverId(""); 
+    } else {
+      setMessage("Failed to send friend request: " + (data.error || "Unknown error"));
+    }
+
+  } catch (err) {
+    console.error("Error sending friend request:", err);
+    setMessage("An unexpected error occurred.");
   }
+};
 
   return(
   <div>
