@@ -1,23 +1,27 @@
 from flask import Blueprint, request, jsonify
 from services.GroupService import GroupService
+from utils.HttpStatus import HttpStatus
 
 group_bp = Blueprint('group', __name__, url_prefix='/group')
 
 class GroupController:
-    def __init__(self, service: GroupService):
+    def __init__(self, service: GroupService, get_user_id_func):
         self.__service = service
+        self.get_user_id = get_user_id_func
         self.__register_routes()
 
     def __register_routes(self):
         group_bp.add_url_rule('/create', 'create_group', self.create_group, methods=['POST'])
         # group_bp.add_url_rule('/invite', 'invite_user', self.invite_user, methods=['POST'])
         group_bp.add_url_rule('/my-groups', 'get_user_groups', self.get_user_groups, methods=['GET'])  
+        group_bp.add_url_rule('/join', 'join', self.join_group, methods=['POST'])
+        group_bp.add_url_rule('/leave', 'leave', self.leave_group, methods=['POST'])
 
     def create_group(self):
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.get_user_id(request)
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             data = request.get_json()
             group = self.__service.create_group(
                 user_id,
@@ -31,20 +35,54 @@ class GroupController:
                 "description": group.description,
                 "invite_code": group.invite_code,
                 "members": group.members
-            }), 201
+            }), HttpStatus.CREATED
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    
-    
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def get_user_groups(self):
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.get_user_id(request)
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             groups = self.__service.get_user_groups(user_id)
-            return jsonify({"groups": groups}), 200
+            return jsonify({"groups": groups}), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
-    
+    def join_group(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+            # parse out the group invite data
+            data = request.get_json()
+
+            invite_code = data["invite_code"]
+            if not invite_code:
+                raise Exception("Could not parse invite_code from request")
+            
+            successful = self.__service.join_group(invite_code, user_id)
+            
+            return jsonify({"message": "Successfully joined group", "success": successful}), HttpStatus.OK
+            
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+    def leave_group(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+            
+            data = request.get_json()
+            
+            group_id = data["group_id"]
+            if not group_id:
+                raise Exception("Could not parse group_id from request")
+
+            successful = self.__service.leave_group(group_id, user_id)
+            
+            return jsonify({"message": "Successfully left group", "success": successful}), HttpStatus.OK
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR

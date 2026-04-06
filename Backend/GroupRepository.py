@@ -8,6 +8,9 @@ class GroupRepository:
     def save_group(self, group: Group) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             client.table("groups").insert({
                 "group_id": group.group_id,
                 "group_name": group.group_name,
@@ -21,9 +24,13 @@ class GroupRepository:
         except Exception as e:
             print(f"Error saving group: {e}")
             return False
+
     def get_user_groups(self, user_id: str) -> list:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             result = client.table("groups").select("*").contains(
                 "members", [user_id]
             ).execute()
@@ -32,6 +39,114 @@ class GroupRepository:
             print(f"Error getting user groups: {e}")
             return []
 
+    def get_group_invite(self, invite_code: str) -> list:
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            result = (
+                client.table("group_invites")
+                      .select("*")
+                      .eq("invite_id", invite_code)
+                      .execute()
+            )
+            return result.data
+        except Exception as e:
+            print(f"Error getting group invite: {e}")
+            return []
+
+    def add_user_to_group(self, group_id: str, user_id: str):
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            # Fetch existing members
+            group_resp = (
+                client.table("groups")
+                .select("members")
+                .eq("group_id", group_id)
+                .single()
+                .execute()
+            )
+
+            members: list[str] = group_resp.data.get("members", [])
+
+            # Avoid duplicates
+            if user_id not in members:
+                raise Exception("User is not a member of this group")
+            members.append(user_id)
+
+            # Update group row
+            update_resp = (
+                client.table("groups")
+                .update({"members": members})
+                .eq("group_id", group_id)
+                .execute()
+            )
+
+            return update_resp.data
+
+        except Exception as e:
+            print(f"Error adding user to group: {e}")
+            return None
+
+    def mark_invite_used(self, invite_code: str):
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            invite_resp = (
+                client.table("group_invites")
+                      .update({"status": "ACCEPTED"})
+                      .eq("invite_id", invite_code)
+                      .execute()
+            )
+            if not invite_resp.data:
+                raise Exception("invite_resp is None")
+
+            return invite_resp.data
+
+        except Exception as e:
+            print(f"Error updating invite status: {e}")
+            return []
+
+    def remove_user_from_group(self, group_id: str, user_id: str):
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            # Fetch existing members
+            group_resp = (
+                client.table("groups")
+                .select("members")
+                .eq("group_id", group_id)
+                .single()
+                .execute()
+            )
+
+            members: list[str] = group_resp.data.get("members", [])
+
+            # Remove user if present
+            if user_id in members:
+                members.remove(user_id)
+
+            # Update group row
+            update_resp = (
+                client.table("groups")
+                .update({"members": members})
+                .eq("group_id", group_id)
+                .execute()
+            )
+
+            return update_resp.data
+
+        except Exception as e:
+            print(f"Error removing user from group: {e}")
+            return None
     # def get_group(self, group_id: str) -> dict:
     #     try:
     #         client = self.__db_client.get_client()
@@ -43,4 +158,3 @@ class GroupRepository:
     #         print(f"Error getting group: {e}")
     #         return {}
 
-    

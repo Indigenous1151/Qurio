@@ -79,7 +79,7 @@ user_service = UserService(repo=user_repo)
 friend_service = FriendService(friend_repo=friend_repo,user_repo=user_repo)
 auth_service = AuthService(repo=user_repo)
 trivia_service = TriviaService()
-group_service = GroupService(repo = group_repo,user_repo=user_repo)
+group_service = GroupService(group_repo = group_repo,user_repo=user_repo)
 game_service = GameService(
     question_repo=question_repo,
     game_repo=game_repo,
@@ -91,7 +91,7 @@ UserController(service=user_service, get_user_id_func=get_user_id_from_request)
 AuthController(service=auth_service, get_user_id_func=get_user_id_from_request)
 GameController(game_service=game_service, get_user_id_func=get_user_id_from_request)
 FriendController(service=friend_service)
-GroupController(service=group_service)
+GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
 
 app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)
