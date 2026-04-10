@@ -20,6 +20,15 @@ export function PersonalStatistics() {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) setUser(data.user);
+    }
+    fetchUser();
+  }, []);
 
   const getAuthHeader = async () => {
     const { data: { session } } = await supabase.auth.getSession();
