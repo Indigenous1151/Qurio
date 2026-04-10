@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
-import { supabase } from "../client/supabase";
+import { supabase } from "../supabaseClient/supabaseClient";
 import "../details/AuthForms.css";
 
 export function ResetPassword() {

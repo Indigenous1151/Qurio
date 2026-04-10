@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
 import '../details/ViewFriendList.css';
-import { supabase } from '../client/supabase'
+import { supabase } from '../supabaseClient/supabaseClient'
 import { useNavigate } from "react-router-dom";
 
 

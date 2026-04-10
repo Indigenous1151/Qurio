@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../details/Groups.css";
-import { supabase } from '../client/supabase';
+import { supabase } from '../supabaseClient/supabaseClient';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

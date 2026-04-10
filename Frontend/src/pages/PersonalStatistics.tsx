@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "../details/PersonalStatistics.css";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
-import { supabase } from "../client/supabase";
+import { supabase } from "../supabaseClient/supabaseClient";
 
 type Statistics = {
   username: string;
