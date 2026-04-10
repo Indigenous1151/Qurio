@@ -27,6 +27,15 @@ export function Groups() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    };
+  };
+
   const clearFeedback = () => {
     setMessage("");
     setError("");
@@ -43,18 +52,15 @@ export function Groups() {
 
   // fetch user groups on load
   useEffect(() => {
-    if (!userId) return;
     fetchUserGroups();
-  }, [userId]);
+  }, []);
 
   const fetchUserGroups = async () => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/my-groups`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        }
+        headers
       });
       const data = await res.json();
       if (res.ok) {
@@ -78,12 +84,10 @@ export function Groups() {
     }
 
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/join`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({ invite_code: joinCode })
       });
 
@@ -110,12 +114,10 @@ export function Groups() {
     }
 
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({
           group_name: newGroupName,
           description: newGroupDescription

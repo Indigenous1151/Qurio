@@ -4,8 +4,9 @@ from services.FriendService import FriendService
 friend_bp = Blueprint('friend', __name__, url_prefix='/friend')
 
 class FriendController:
-    def __init__(self, service: FriendService):
+    def __init__(self, service: FriendService, get_user_id_func):
         self.__service = service
+        self.__get_user_id_func = get_user_id_func
         self.__register_routes()
 
     def __register_routes(self):
@@ -57,7 +58,7 @@ class FriendController:
             return jsonify({"error": str(e)}), 500
     def send_friend_request(self):
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.__get_user_id_func(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), 401
             data = request.get_json()
@@ -68,7 +69,7 @@ class FriendController:
 
     def accept_friend_request(self):
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.__get_user_id_func(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), 401
             data = request.get_json()
@@ -79,7 +80,7 @@ class FriendController:
 
     def decline_friend_request(self):
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.__get_user_id_func(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), 401
             data = request.get_json()
@@ -98,7 +99,7 @@ class FriendController:
             return jsonify({"error": str(e)}), 500
     def get_friends_list(self):
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.__get_user_id_func(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), 401
             friends = self.__service.get_friends_list(user_id)
@@ -107,7 +108,7 @@ class FriendController:
             return jsonify({"error": str(e)}), 500
     def remove_friend(self):
         try:
-            user_id = request.headers.get('X-User-Id')
+            user_id = self.__get_user_id_func(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), 401
             data = request.get_json()
