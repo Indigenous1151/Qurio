@@ -13,6 +13,7 @@ class GroupController:
     def __register_routes(self):
         group_bp.add_url_rule('/create', 'create_group', self.create_group, methods=['POST'])
         # group_bp.add_url_rule('/invite', 'invite_user', self.invite_user, methods=['POST'])
+        group_bp.add_url_rule('/invites', 'get_group_invites', self.get_group_invites, methods=['GET'])
         group_bp.add_url_rule('/my-groups', 'get_user_groups', self.get_user_groups, methods=['GET'])  
         group_bp.add_url_rule('/join', 'join', self.join_group, methods=['POST'])
         group_bp.add_url_rule('/leave', 'leave', self.leave_group, methods=['POST'])
@@ -49,22 +50,31 @@ class GroupController:
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
+    def get_group_invites(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            invites = self.__service.get_group_invites(user_id)
+            return jsonify({"invites": invites}), HttpStatus.OK
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
     def join_group(self):
         try:
             user_id = self.get_user_id(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
-            # parse out the group invite data
-            data = request.get_json()
 
-            invite_code = data["invite_code"]
+            data = request.get_json() or {}
+            invite_code = data.get("invite_code")
             if not invite_code:
-                raise Exception("Could not parse invite_code from request")
-            
+                return jsonify({"error": "Could not parse invite_code from request"}), HttpStatus.BAD_REQUEST
+
             successful = self.__service.join_group(invite_code, user_id)
-            
             return jsonify({"message": "Successfully joined group", "success": successful}), HttpStatus.OK
-            
+
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 

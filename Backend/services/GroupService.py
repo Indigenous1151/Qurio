@@ -15,6 +15,9 @@ class GroupService:
 
     def get_user_groups(self, user_id: str) -> list:
         return self.__group_repo.get_user_groups(user_id)
+    
+    def get_group_invites(self, user_id: str) -> list:
+        return self.__group_repo.get_group_invites(user_id)
 
     # TODO: test this method
     def join_group(self, invite_code: str, user_id: str) -> bool:

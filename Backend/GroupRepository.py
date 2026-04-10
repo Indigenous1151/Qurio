@@ -56,6 +56,25 @@ class GroupRepository:
             print(f"Error getting group invite: {e}")
             return []
 
+    def get_group_invites(self, user_id: str) -> list:
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            result = (
+                client.table("group_invites")
+                .select("*")
+                .eq("invited_user", user_id)
+                .eq("status", "PENDING")
+                .execute()
+            )
+
+            return result.data
+        except Exception as e:
+            print(f"Error getting group invites: {e}")
+            return []
+
     def add_user_to_group(self, group_id: str, user_id: str):
         try:
             client = self.__db_client.get_client()
@@ -74,8 +93,8 @@ class GroupRepository:
             members: list[str] = group_resp.data.get("members", [])
 
             # Avoid duplicates
-            if user_id not in members:
-                raise Exception("User is not a member of this group")
+            if user_id in members:
+                raise Exception("User is already a member of this group")
             members.append(user_id)
 
             # Update group row
