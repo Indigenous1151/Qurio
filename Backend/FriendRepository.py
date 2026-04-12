@@ -3,19 +3,7 @@ from models.FriendRequest import FriendRequest
 class FriendRepository:
     def __init__(self, db_client: SupabaseClient):
         self.__db_client = db_client
-    def save_request(self,req:FriendRequest) -> bool:
-        try:
-            client = self.__db_client.get_client()
-            client.table("friend_requests").insert({
-                "request_id": req.request_id,
-                "sender_id": req.sender_id,
-                "receiver_id": req.receiver_id,
-                "status": req.status
-            }).execute()
-            return True
-        except Exception as e:
-            print(f"Error saving friend request: {e}")
-            return False
+    
 
     def update_status(self,sender_id: str,receiver_id:str,status:str) -> bool:
         try:
@@ -27,6 +15,23 @@ class FriendRepository:
         except Exception as e:
                 print(f"Error updating friend request: {e}")
                 return False
+    
+    def save_request(self, req: FriendRequest) -> bool:
+        try:
+            client = self.__db_client.get_client()
+            client.table("friend_requests").insert({
+                "request_id": req.request_id,
+                "sender_id": req.sender_id,
+                "receiver_id": req.receiver_id,
+                "status": req.status
+            }).execute()
+            return True
+        except Exception as e:
+            if "unique_friend_request" in str(e):
+                print("Already friends!")
+                return False
+            print(f"Error saving friend request: {e}")
+            return False
 
     def get_friends_list(self, user_id: str) -> list:
         try:
