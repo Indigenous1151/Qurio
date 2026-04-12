@@ -20,7 +20,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { PublicOnlyRoute } from './components/PublicOnlyRoute'
 import { Groups } from "./pages/Groups";
 import { GroupDetails } from "./pages/GroupDetails";
-
+import { AdminPayment } from './pages/PaymentConfig'
 function App() {
  
 
@@ -50,6 +50,7 @@ function App() {
           <Route path= "/add-friend" element={<AddFriend/>} />
           <Route path="/groups" element={<Groups />} />
           <Route path="/groups/:groupId" element={<GroupDetails />} />
+        <Route path="/admin/payment" element={<AdminPayment />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
