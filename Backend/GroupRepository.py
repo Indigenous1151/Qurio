@@ -35,7 +35,7 @@ class GroupRepository:
                 "group_id", group_id
             ).execute()
             if result.data and len(result.data) > 0:
-                return result.data[0]
+                return result.data[0] # type: ignore
             return {}
         except Exception as e:
             print(f"Error getting group: {e}")
@@ -115,7 +115,7 @@ class GroupRepository:
                 .execute()
             )
 
-            members: list[str] = group_resp.data.get("members", [])
+            members: list[str] = group_resp.data.get("members", []) # type: ignore
 
             # Avoid duplicates
             if user_id in members:
@@ -172,7 +172,7 @@ class GroupRepository:
                 .execute()
             )
 
-            members: list[str] = group_resp.data.get("members", [])
+            members: list[str] = group_resp.data.get("members", []) # type: ignore
 
             # Remove user if present
             if user_id in members:
@@ -195,6 +195,9 @@ class GroupRepository:
     def save_invite(self, invite) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             client.table("group_invites").insert({
                 "invite_id": invite.invite_id,
                 "group_id": invite.group_id,
@@ -238,6 +241,9 @@ class GroupRepository:
     def update_invite_status(self, invite_id: str, status: str) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             client.table("group_invites").update({
                 "status": status
             }).eq("invite_id", invite_id).execute()
@@ -249,6 +255,9 @@ class GroupRepository:
     def add_member(self, group_id: str, user_id: str) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             group = self.get_group(group_id)  
             if not group:
                 raise Exception("Group not found")
