@@ -377,7 +377,7 @@ export function TriviaGame() {
       console.log("HINT RESPONSE:", q);
       console.log("Removed answers:", q.removed_answers);
       const availableIncorrect = q.incorrect_answers.filter(
-        (opt) => !q.removed_answers.includes(opt)
+        (opt: any) => !q.removed_answers.includes(opt)
       );
       console.log("AvailableIncorrect" + availableIncorrect);
       setGameState(prev => prev ? {

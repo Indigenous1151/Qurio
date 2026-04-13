@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../details/Groups.css";
 import { supabase } from '../supabaseClient/supabaseClient';
@@ -16,7 +16,7 @@ export function GroupDetails() {
 
   const [group, setGroup] = useState<any>(null);
   const [members, setMembers] = useState<Member[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
+  // const [userId, setUserId] = useState<string | null>(null);
   const [inviteUsername, setInviteUsername] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -30,13 +30,13 @@ export function GroupDetails() {
     };
   };
 
-  useEffect(() => {
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) setUserId(data.user.id);
-    }
-    fetchUser();
-  }, []);
+  // useEffect(() => {
+  //   async function fetchUser() {
+  //     const { data } = await supabase.auth.getUser();
+  //     if (data?.user) setUserId(data.user.id);
+  //   }
+  //   fetchUser();
+  // }, []);
 
   useEffect(() => {
     if (!groupId) return;

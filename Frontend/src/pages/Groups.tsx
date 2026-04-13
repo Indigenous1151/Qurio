@@ -29,7 +29,7 @@ export function Groups() {
 
   const [groups, setGroups] = useState<Group[]>([]);
   const [pendingInvites, setPendingInvites] = useState<GroupInvite[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
+  // const [userId, setUserId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
@@ -51,13 +51,13 @@ export function Groups() {
     setError("");
   };
 
-  useEffect(() => {
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) setUserId(data.user.id);
-    }
-    fetchUser();
-  }, []);
+  // useEffect(() => {
+  //   async function fetchUser() {
+  //     const { data } = await supabase.auth.getUser();
+  //     if (data?.user) setUserId(data.user.id);
+  //   }
+  //   fetchUser();
+  // }, []);
 
   useEffect(() => {
     const init = async () => {
