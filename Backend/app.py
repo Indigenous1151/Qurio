@@ -18,14 +18,19 @@ from services.UserService import UserService
 from services.GroupService import GroupService
 from services.AuthService import AuthService
 from services.GameService import GameService
+from services.PaymentService import PaymentService
 from controllers.UserController import UserController, user_bp
 from controllers.AuthController import AuthController, auth_bp
 from controllers.GameController import GameController, game_bp
 from controllers.GroupController import GroupController,group_bp
 from controllers.FriendController import FriendController, friend_bp
 from controllers.StatisticsController import StatisticsController, statistics_bp
+from controllers.PaymentController import PaymentController, payment_bp
+from controllers.StatisticsController import statistics_bp
 from services.FriendService import FriendService
 from FriendRepository import FriendRepository
+from PaymentRepository import PaymentRepository
+
 
 
 
@@ -72,6 +77,7 @@ game_repo = GameRepository(db_client=mongo)
 question_repo = QuestionRepository(db_client=mongo)
 friend_repo = FriendRepository(db_client=supabase)
 group_repo = GroupRepository(db_client=supabase)
+payment_repo = PaymentRepository(db_client=supabase)
 
 
 # Service Creation
@@ -85,6 +91,7 @@ game_service = GameService(
     game_repo=game_repo,
     trivia_service=trivia_service
 )
+payment_service = PaymentService(repo = payment_repo)
 
 # Controller Creation
 UserController(service=user_service, get_user_id_func=get_user_id_from_request)
@@ -93,6 +100,9 @@ GameController(game_service=game_service, get_user_id_func=get_user_id_from_requ
 FriendController(service=friend_service, get_user_id_func=get_user_id_from_request)
 GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
 StatisticsController(get_user_id_func=get_user_id_from_request)
+FriendController(service=friend_service, get_user_id_func=get_user_id_from_request)
+GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
+PaymentController(service=payment_service)
 
 app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)
@@ -100,6 +110,7 @@ app.register_blueprint(friend_bp)
 app.register_blueprint(game_bp)
 app.register_blueprint(group_bp)
 app.register_blueprint(statistics_bp)
+app.register_blueprint(payment_bp)
 
 if __name__ == '__main__':
     print(app.url_map)
