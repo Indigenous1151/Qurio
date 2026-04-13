@@ -12,7 +12,6 @@ class GroupController:
 
     def __register_routes(self):
         group_bp.add_url_rule('/create', 'create_group', self.create_group, methods=['POST'])
-        group_bp.add_url_rule('/invites', 'get_group_invites', self.get_group_invites, methods=['GET'])
         group_bp.add_url_rule('/my-groups', 'get_user_groups', self.get_user_groups, methods=['GET'])
         group_bp.add_url_rule('/join', 'join', self.join_group, methods=['POST'])
         group_bp.add_url_rule('/leave', 'leave', self.leave_group, methods=['POST'])
@@ -59,17 +58,6 @@ class GroupController:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             groups = self.__service.get_user_groups(user_id)
             return jsonify({"groups": groups}), HttpStatus.OK
-        except Exception as e:
-            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
-
-    def get_group_invites(self):
-        try:
-            user_id = self.get_user_id(request)
-            if not user_id:
-                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
-
-            invites = self.__service.get_group_invites(user_id)
-            return jsonify({"invites": invites}), HttpStatus.OK
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 

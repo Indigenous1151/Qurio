@@ -80,11 +80,20 @@ class GroupRepository:
 
             result = (
                 client.table("group_invites")
-                .select("*")
+                .select("""
+                    invite_id,
+                    group_id,
+                    status,
+                    invited_by,
+                    invited_by_user:public_profile ( username ),
+                    groups ( group_name )
+                """)
                 .eq("invited_user", user_id)
                 .eq("status", "PENDING")
                 .execute()
             )
+
+            print(f"DEBUG RESULT DATA: {result.data}")
 
             return result.data
         except Exception as e:
@@ -201,9 +210,26 @@ class GroupRepository:
     def get_pending_invites(self, user_id: str) -> list:
         try:
             client = self.__db_client.get_client()
-            result = client.table("group_invites").select("*, groups(group_name)").eq(
-                "invited_user", user_id
-            ).eq("status", "pending").execute()
+            if not client:
+                raise Exception("Database client is None")
+
+            result = (
+                client.table("group_invites")
+                .select("""
+                    invite_id,
+                    group_id,
+                    status,
+                    invited_by,
+                    invited_by_user:public_profile!group_invites_invited_by_fk ( username ),
+                    groups!group_invites_group_id_fkey ( group_name )
+                """)
+                .eq("invited_user", user_id)
+                .eq("status", "pending")
+                .execute()
+            )
+
+            print(f"DEBUG RESULT DATA: {result.data}")
+
             return result.data
         except Exception as e:
             print(f"Error getting pending invites: {e}")

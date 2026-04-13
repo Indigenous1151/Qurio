@@ -21,6 +21,7 @@ type GroupInvite = {
   status: string;
   groups: { group_name: string };
   invited_by: string;
+  invited_by_user: { username: string };
 };
 
 export function Groups() {
@@ -59,7 +60,12 @@ export function Groups() {
   }, []);
 
   useEffect(() => {
-    fetchUserGroups();
+    const init = async () => {
+      await fetchUserGroups();
+      await fetchPendingInvites();
+    }
+
+    init();
   }, []);
 
   const fetchUserGroups = async () => {
@@ -83,8 +89,10 @@ export function Groups() {
 
   const fetchPendingInvites = async () => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/pending-invites`, {
-        headers: { "X-User-Id": userId as string }
+        method: "GET",
+        headers
       });
       const data = await res.json();
       if (res.ok) setPendingInvites(data.pending_invites);
@@ -160,12 +168,10 @@ export function Groups() {
 
   const handleAcceptInvite = async (invite_id: string) => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/accept-invite`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({ invite_id })
       });
       if (res.ok) {
@@ -182,12 +188,10 @@ export function Groups() {
 
   const handleDeclineInvite = async (invite_id: string) => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/decline-invite`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({ invite_id })
       });
       if (res.ok) {
@@ -255,7 +259,7 @@ export function Groups() {
                     <div key={invite.invite_id} className="invite-item">
                       <div>
                         <h3>{invite.groups?.group_name}</h3>
-                        <p>Invited by: {invite.invited_by}</p>
+                        <p>Invited by: {invite.invited_by_user?.username || "Unknown User"}</p>
                       </div>
                       <div className="invite-actions">
                         <button
