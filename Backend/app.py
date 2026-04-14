@@ -100,8 +100,6 @@ GameController(game_service=game_service, get_user_id_func=get_user_id_from_requ
 FriendController(service=friend_service, get_user_id_func=get_user_id_from_request)
 GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
 StatisticsController(get_user_id_func=get_user_id_from_request)
-FriendController(service=friend_service, get_user_id_func=get_user_id_from_request)
-GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
 PaymentController(service=payment_service)
 
 app.register_blueprint(user_bp)

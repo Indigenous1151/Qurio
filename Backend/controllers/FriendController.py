@@ -10,7 +10,7 @@ class FriendController:
         self.__register_routes()
 
     def __register_routes(self):
-        friend_bp.add_url_rule('/request', 'send_request', self.send_friend_request, methods=['POST'])
+        friend_bp.add_url_rule('/request', 'send_friend_request', self.send_friend_request, methods=['POST'])
         friend_bp.add_url_rule('/accept', 'accept_request', self.accept_friend_request, methods=['POST'])
         friend_bp.add_url_rule('/decline', 'decline_request', self.decline_friend_request, methods=['POST'])
         friend_bp.add_url_rule('/pending', 'pending_requests', self.get_pending_requests, methods=['GET'])

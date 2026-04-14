@@ -15,7 +15,6 @@ class GroupController:
         group_bp.add_url_rule('/my-groups', 'get_user_groups', self.get_user_groups, methods=['GET'])
         group_bp.add_url_rule('/join', 'join', self.join_group, methods=['POST'])
         group_bp.add_url_rule('/leave', 'leave', self.leave_group, methods=['POST'])
-        group_bp.add_url_rule('/my-groups', 'get_user_groups', self.get_user_groups, methods=['GET'])
         group_bp.add_url_rule('/invite', 'invite_user', self.invite_user, methods=['POST'])
         group_bp.add_url_rule('/pending-invites', 'pending_invites', self.get_pending_invites, methods=['GET'])
         group_bp.add_url_rule('/accept-invite', 'accept_invite', self.accept_invite, methods=['POST'])
