@@ -8,6 +8,9 @@ class FriendRepository:
     def update_status(self,sender_id: str,receiver_id:str,status:str) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             client.table("friend_requests").update({
                 "status": status
             }).eq("sender_id", sender_id).eq("receiver_id", receiver_id).execute()
@@ -19,6 +22,9 @@ class FriendRepository:
     def save_request(self, req: FriendRequest) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             client.table("friend_requests").insert({
                 "request_id": req.request_id,
                 "sender_id": req.sender_id,
@@ -36,27 +42,38 @@ class FriendRepository:
     def get_friends_list(self, user_id: str) -> list:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             result = client.table("friend_requests").select("*").eq(
                 "status", "accepted"
             ).or_(f"sender_id.eq.{user_id},receiver_id.eq.{user_id}").execute()
             return result.data
         except Exception as e:
             print(f"Error getting friends: {e}")
-            raise e  
+            raise e
 
     def get_pending_requests(self, user_id: str) -> list:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             result = client.table("friend_requests").select("*").eq(
                 "receiver_id", user_id
             ).eq("status", "pending").execute()
+
             return result.data
         except Exception as e:
             print(f"Error getting pending requests: {e}")
             return []
+
     def delete_friendship(self, user_id: str, friend_id: str) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             client.table("friend_requests").delete().or_(
                 f"and(sender_id.eq.{user_id},receiver_id.eq.{friend_id}),"
                 f"and(sender_id.eq.{friend_id},receiver_id.eq.{user_id})"
