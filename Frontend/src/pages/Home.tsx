@@ -9,6 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 export function Home() {
 const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   // useEffect(() => {
   //   async function checkAdmin() {
   //     const { data } = await supabase.auth.getUser();
@@ -35,6 +36,21 @@ const [isAdmin, setIsAdmin] = useState(false);
 
     setUserId(user.id);
 
+  const { data: profile, error } = await supabase
+  .from("public_profile")
+  .select("username")
+  .eq("user_id", user.id)
+  .maybeSingle();
+
+if (error) {
+  console.error("Error fetching profile:", error);
+} 
+
+if (!profile) {
+  setUsername("Guest")
+} else {
+  setUsername(profile.username);
+}
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session?.access_token) return;
@@ -74,7 +90,7 @@ const [isAdmin, setIsAdmin] = useState(false);
             style={{ fontFamily: "'Georgia', serif", letterSpacing: '-0.02em' }}
           >
             Welcome back, <br />
-            <span className="text-[#638F77]">{isAdmin ? "Admin" : "USERNAME"}</span>
+            <span className="text-[#638F77]">{isAdmin ? "Admin" : username}</span>
           </h1>
 
           <p className="text-[#555] text-base sm:text-lg max-w-md mx-auto mb-10 sm:mb-12">
