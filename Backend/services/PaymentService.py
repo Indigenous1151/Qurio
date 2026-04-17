@@ -8,7 +8,7 @@ class PaymentService:
         if not self.__repo.is_admin(user_id):
             raise Exception("Unauthorized: Admin access required")
 
-    def configure_payment_method(self, user_id: str, payment_type: str) -> bool:
+    def configure_payment_method(self, user_id: str, payment_type: str):
         self.__check_admin(user_id)
         return self.__repo.save_payment_config(payment_type)
 

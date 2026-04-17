@@ -9,20 +9,49 @@ const API_URL = import.meta.env.VITE_API_URL;
 export function Home() {
 const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  // useEffect(() => {
+  //   async function checkAdmin() {
+  //     const { data } = await supabase.auth.getUser();
+  //     if (data?.user) {
+  //       setUserId(data.user.id);
+  //       const res = await fetch(`${API_URL}/payment/admin/is-admin`, {
+  //         headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${session.access_token}`
+  //       },
+  //       });
+  //       const json = await res.json();
+  //       setIsAdmin(json.is_admin);
+  //     }
+  //   }
+  //   checkAdmin();
+  // }, []);
+
   useEffect(() => {
-    async function checkAdmin() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUserId(data.user.id);
-        const res = await fetch(`${API_URL}/payment/admin/is-admin`, {
-          headers: { "X-User-Id": data.user.id }
-        });
-        const json = await res.json();
-        setIsAdmin(json.is_admin);
-      }
-    }
-    checkAdmin();
-  }, []);
+  async function checkAdmin() {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    setUserId(user.id);
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session?.access_token) return;
+
+    const res = await fetch(`${API_URL}/payment/admin/is-admin`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+    });
+
+    const json = await res.json();
+    setIsAdmin(json.is_admin);
+  }
+
+  checkAdmin();
+}, []);
   return (
     <div>
       <Navbar />

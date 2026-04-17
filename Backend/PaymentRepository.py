@@ -15,22 +15,41 @@ class PaymentRepository:
             print(f"Error checking admin: {e}")
             return False
 
-    def save_payment_config(self, payment_type: str) -> bool:
-        try:
-            client = self.__db_client.get_client()
-            client.table("payment_config").insert({
+    def save_payment_config(self, payment_type: str):
+        client = self.__db_client.get_client()
+
+        result = client.table("payment_config") \
+            .select("*") \
+            .eq("payment_type", payment_type) \
+            .execute()
+
+        existing = result.data
+
+        # if does not exist, insert
+        if not existing:
+            return client.table("payment_config").insert({
                 "payment_type": payment_type,
                 "is_active": True
             }).execute()
-            return True
-        except Exception as e:
-            print(f"Error saving payment config: {e}")
-            return False
 
+        row = existing[0]
+
+        
+        if not row["is_active"]:
+            return client.table("payment_config") \
+                .update({"is_active": True}) \
+                .eq("payment_type", payment_type) \
+                .execute()
+
+        # if already active
+        raise Exception("already configured")
     def get_payment_configs(self) -> list:
         try:
             client = self.__db_client.get_client()
             result = client.table("payment_config").select("*").execute()
+
+            #print("DB RESULT:", result.data)   
+
             return result.data
         except Exception as e:
             print(f"Error getting payment configs: {e}")

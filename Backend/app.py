@@ -47,7 +47,9 @@ jwks_url = f"{supabase_url}/auth/v1/.well-known/jwks.json"
 jwk_client = PyJWKClient(jwks_url)
 
 def get_user_id_from_request(request):
+    
     auth_header = request.headers.get('Authorization')
+    
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
     token = auth_header.replace('Bearer ', '')
@@ -97,10 +99,15 @@ payment_service = PaymentService(repo = payment_repo)
 UserController(service=user_service, get_user_id_func=get_user_id_from_request)
 AuthController(service=auth_service, get_user_id_func=get_user_id_from_request)
 GameController(game_service=game_service, get_user_id_func=get_user_id_from_request)
+
+
+PaymentController(service=payment_service,get_user_id_func=get_user_id_from_request)
+
 FriendController(service=friend_service, get_user_id_func=get_user_id_from_request)
 GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
 StatisticsController(get_user_id_func=get_user_id_from_request)
-PaymentController(service=payment_service)
+
+
 
 app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)

@@ -14,69 +14,118 @@ type PaymentConfig = {
 };
 
 export function AdminPayment() {
+
+
   const navigate = useNavigate();
-  const [userId, setUserId] = useState<string | null>(null);
+ // const [userId, setUserId] = useState<string | null>(null);
   const [configs, setConfigs] = useState<PaymentConfig[]>([]);
   const [newPaymentType, setNewPaymentType] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) setUserId(data.user.id);
-      else navigate("/");
-    }
-    fetchUser();
-  }, []);
+  const getToken = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token;
+};
 
   useEffect(() => {
-    if (!userId) return;
-    fetchConfigs();
-  }, [userId]);
+  const init = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      navigate("/");
+      return;
+    }
+
+    await fetchConfigs(); 
+  };
+
+  init();
+}, []);
 
   const fetchConfigs = async () => {
-    try {
-      const res = await fetch(`${API_URL}/payment/admin/configs`, {
-        headers: { "X-User-Id": userId as string }
-      });
-      const data = await res.json();
-      if (res.ok) setConfigs(data.configs);
-      else setError(data.error || "Failed to load.");
-    } catch { setError("Failed to load configs."); }
-  };
+  try {
+    const token = await getToken();
+    if (!token) return setError("Not authenticated");
 
-  const handleAddConfig = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage(""); setError("");
-    if (!newPaymentType.trim()) { setError("Please select a payment type."); return; }
-    try {
-      const res = await fetch(`${API_URL}/payment/admin/configure`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Id": userId as string },
-        body: JSON.stringify({ payment_type: newPaymentType })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage(`"${newPaymentType}" added!`);
-        setNewPaymentType("");
-        fetchConfigs();
-      } else setError(data.error || "Failed to add.");
-    } catch { setError("Failed to add payment method."); }
-  };
+    const res = await fetch(`${API_URL}/payment/admin/configs`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    const data = await res.json();
+
+    if (res.ok) setConfigs(data.configs);
+    else setError(data.error || "Failed to load.");
+  } catch {
+    setError("Failed to load configs.");
+  }
+};
+
+ const handleAddConfig = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setMessage("");
+  setError("");
+
+  if (!newPaymentType.trim()) {
+    setError("Please select a payment type.");
+    return;
+  }
+
+  try {
+    const token = await getToken();
+    if (!token) return setError("Not authenticated");
+
+    const res = await fetch(`${API_URL}/payment/admin/configure`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ payment_type: newPaymentType })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setMessage(`"${newPaymentType}" added!`);
+      setNewPaymentType("");
+      fetchConfigs();
+    } else {
+      setError(data.error || "Failed to add.");
+    }
+  } catch {
+    setError("Failed to add payment method.");
+  }
+};
 
   const handleDelete = async (config_id: string, payment_type: string) => {
-    setMessage(""); setError("");
-    try {
-      const res = await fetch(`${API_URL}/payment/admin/configs/${config_id}`, {
-        method: "DELETE",
-        headers: { "X-User-Id": userId as string }
-      });
-      if (res.ok) { setMessage(`"${payment_type}" removed.`); fetchConfigs(); }
-      else setError("Failed to delete.");
-    } catch { setError("Failed to delete."); }
-  };
+  setMessage("");
+  setError("");
 
+  try {
+    const token = await getToken();
+    if (!token) return setError("Not authenticated");
+
+    const res = await fetch(`${API_URL}/payment/admin/configs/${config_id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (res.ok) {
+      setMessage(`"${payment_type}" removed.`);
+      fetchConfigs();
+    } else {
+      setError("Failed to delete.");
+    }
+  } catch {
+    setError("Failed to delete.");
+  }
+};
   return (
     <div className="min-h-screen bg-[#f5f0e8]">
       <Navbar />
@@ -87,12 +136,12 @@ export function AdminPayment() {
         </button>
 
         <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">Configure Payment Methods</h1>
-        <p className="text-gray-500 mb-8">Admin only — manage available payment types</p>
+        <p className="text-gray-500 mb-8">Manage available payment types</p>
 
         {message && <div className="bg-green-100 text-green-800 px-4 py-3 rounded-xl mb-4">{message}</div>}
         {error && <div className="bg-red-100 text-red-800 px-4 py-3 rounded-xl mb-4">{error}</div>}
 
-        {/* Add payment method */}
+        
         <div className="bg-[#638F77] rounded-2xl p-6 mb-6">
           <h2 className="text-white font-bold text-lg mb-4">Add Payment Method</h2>
           <form onSubmit={handleAddConfig} className="flex gap-3">
@@ -109,7 +158,7 @@ export function AdminPayment() {
           </form>
         </div>
 
-        {/* Current payment methods */}
+       
         <div className="bg-white rounded-2xl p-6">
           <h2 className="font-bold text-lg mb-4 text-[#1a1a1a]">Configured Payment Methods</h2>
           {configs.length === 0 ? (
