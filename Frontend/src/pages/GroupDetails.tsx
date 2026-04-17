@@ -167,7 +167,7 @@ export function GroupDetails() {
 
           <section className="groups-card danger-card">
             <h2>Leave Group</h2>
-            <p className="empty-text">
+            <p style={{ paddingBottom: "10px" }} className="empty-text">
               Leave this group if you no longer want to participate.
             </p>
             <button className="danger-btn" onClick={handleLeaveGroup}>
