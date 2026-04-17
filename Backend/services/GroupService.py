@@ -17,19 +17,15 @@ class GroupService:
     def get_user_groups(self, user_id: str) -> list:
         return self.__group_repo.get_user_groups(user_id)
 
-    # TODO: test this method
+
     def join_group(self, invite_code: str, user_id: str) -> bool:
         # get invite data from GroupRepository
-        group_invite = self.__group_repo.get_group_invite(invite_code)
+        group = self.__group_repo.get_group_by_invite_code(invite_code)
 
-        if not group_invite:
+        if not group:
             raise Exception("Invalid invite code")
 
-        invite = group_invite[0]
-        group_id = invite["group_id"]
-
-        if invite["invited_user"] and invite["invited_user"] != user_id:
-            raise Exception("Invite is not for this user")
+        group_id = group[0]["group_id"]
 
         membership = self.__group_repo.add_user_to_group(group_id, user_id)
 

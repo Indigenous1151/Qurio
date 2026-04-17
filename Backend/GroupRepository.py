@@ -1,5 +1,6 @@
 from database.SupabaseClient import SupabaseClient
 from models.Group import Group
+from typing import Any, cast
 
 class GroupRepository:
     def __init__(self, db_client: SupabaseClient):
@@ -41,7 +42,7 @@ class GroupRepository:
             print(f"Error getting group: {e}")
             return {}
 
-    def get_user_groups(self, user_id: str) -> list:
+    def get_user_groups(self, user_id: str) -> list[dict[str, Any]]:
         try:
             client = self.__db_client.get_client()
             if not client:
@@ -50,29 +51,30 @@ class GroupRepository:
             result = client.table("groups").select("*").contains(
                 "members", [user_id]
             ).execute()
-            return result.data
+            return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting user groups: {e}")
             return []
 
-    def get_group_invite(self, invite_code: str) -> list:
+    def get_group_by_invite_code(self, invite_code: str) -> list[dict[str, Any]]:
         try:
             client = self.__db_client.get_client()
             if not client:
                 raise Exception("Database client is None")
 
             result = (
-                client.table("group_invites")
+                client.table("groups")
                       .select("*")
-                      .eq("invite_id", invite_code)
+                      .eq("invite_code", invite_code)
                       .execute()
             )
-            return result.data
+
+            return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting group invite: {e}")
             return []
 
-    def get_group_invites(self, user_id: str) -> list:
+    def get_group_invites(self, user_id: str) -> list[dict[str, Any]]:
         try:
             client = self.__db_client.get_client()
             if not client:
@@ -95,7 +97,7 @@ class GroupRepository:
 
             print(f"DEBUG RESULT DATA: {result.data}")
 
-            return result.data
+            return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting group invites: {e}")
             return []
@@ -130,7 +132,7 @@ class GroupRepository:
                 .execute()
             )
 
-            return update_resp.data
+            return cast( list[dict[str, Any]], update_resp.data)
 
         except Exception as e:
             print(f"Error adding user to group: {e}")
