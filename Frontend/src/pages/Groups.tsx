@@ -21,6 +21,7 @@ type GroupInvite = {
   status: string;
   groups: { group_name: string };
   invited_by: string;
+  invited_by_user: { username: string };
 };
 
 export function Groups() {
@@ -28,7 +29,6 @@ export function Groups() {
 
   const [groups, setGroups] = useState<Group[]>([]);
   const [pendingInvites, setPendingInvites] = useState<GroupInvite[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
@@ -36,33 +36,35 @@ export function Groups() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    };
+  };
+
   const clearFeedback = () => {
     setMessage("");
     setError("");
   };
 
   useEffect(() => {
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) setUserId(data.user.id);
+    const init = async () => {
+      await fetchUserGroups();
+      await fetchPendingInvites();
     }
-    fetchUser();
-  }, []);
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchUserGroups();
-    fetchPendingInvites();
-  }, [userId]);
+    init();
+  }, []);
 
   const fetchUserGroups = async () => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/my-groups`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        }
+        headers
       });
       const data = await res.json();
       if (res.ok) {
@@ -78,8 +80,10 @@ export function Groups() {
 
   const fetchPendingInvites = async () => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/pending-invites`, {
-        headers: { "X-User-Id": userId as string }
+        method: "GET",
+        headers
       });
       const data = await res.json();
       if (res.ok) setPendingInvites(data.pending_invites);
@@ -98,12 +102,10 @@ export function Groups() {
     }
 
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/join`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({ invite_code: joinCode })
       });
 
@@ -130,12 +132,10 @@ export function Groups() {
     }
 
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({
           group_name: newGroupName,
           description: newGroupDescription
@@ -159,12 +159,10 @@ export function Groups() {
 
   const handleAcceptInvite = async (invite_id: string) => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/accept-invite`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({ invite_id })
       });
       if (res.ok) {
@@ -181,12 +179,10 @@ export function Groups() {
 
   const handleDeclineInvite = async (invite_id: string) => {
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/decline-invite`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({ invite_id })
       });
       if (res.ok) {
@@ -254,7 +250,7 @@ export function Groups() {
                     <div key={invite.invite_id} className="invite-item">
                       <div>
                         <h3>{invite.groups?.group_name}</h3>
-                        <p>Invited by: {invite.invited_by}</p>
+                        <p>Invited by: {invite.invited_by_user?.username || "Unknown User"}</p>
                       </div>
                       <div className="invite-actions">
                         <button

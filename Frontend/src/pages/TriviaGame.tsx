@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
-import { supabase } from "../client/supabase";
+import { supabase } from "../supabaseClient/supabaseClient";
 import { useRef } from "react";
 
 
@@ -377,7 +377,7 @@ export function TriviaGame() {
       console.log("HINT RESPONSE:", q);
       console.log("Removed answers:", q.removed_answers);
       const availableIncorrect = q.incorrect_answers.filter(
-        (opt) => !q.removed_answers.includes(opt)
+        (opt: any) => !q.removed_answers.includes(opt)
       );
       console.log("AvailableIncorrect" + availableIncorrect);
       setGameState(prev => prev ? {

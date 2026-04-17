@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "../details/PersonalStatistics.css";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
-import { useAuth } from "../client/AuthProvider";
+import { supabase } from "../supabaseClient/supabaseClient";
 
 type Statistics = {
   username: string;
@@ -17,10 +17,27 @@ type Statistics = {
 };
 
 export function PersonalStatistics() {
-  const { user } = useAuth();
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) setUser(data.user);
+    }
+    fetchUser();
+  }, []);
+
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    };
+  };
 
   useEffect(() => {
     async function fetchStatistics() {
@@ -28,15 +45,10 @@ export function PersonalStatistics() {
         setLoading(true);
         setError("");
 
-        if (!user) {
-          throw new Error("User not logged in.");
-        }
-
+        const headers = await getAuthHeader();
         const response = await fetch("/api/statistics/me", {
           method: "GET",
-          headers: {
-            "X-User-Id": user.id,
-          },
+          headers,
         });
 
         const data = await response.json();

@@ -20,6 +20,15 @@ export function ViewFriendList(){
   const [userId, setUserId] = useState<string | null>(null);
   const [usernames, setUsernames] = useState<{ [key: string]: string }>({});
 
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    };
+  };
+
 
   function addFriend() {
     navigate("/add-friend");
@@ -53,12 +62,10 @@ export function ViewFriendList(){
 
     async function fetchFriends() {
       try {
+        const headers = await getAuthHeader();
         const res = await fetch("http://localhost:5001/friend/list", {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "X-User-Id": userId as string
-          }
+          headers
         });
 
         if (!res.ok) {
@@ -167,11 +174,11 @@ async function removeFriend(friendId: string, requestId: string) {
   try {
     if (!userId) return;
 
+    const headers = await getAuthHeader();
     const res = await fetch("http://localhost:5001/friend/remove", {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json",
-        "X-User-Id": userId
+        ...headers
       },
       body: JSON.stringify({
         friend_id: friendId

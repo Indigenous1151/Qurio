@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../details/Groups.css";
 import { supabase } from '../supabaseClient/supabaseClient';
@@ -16,18 +16,27 @@ export function GroupDetails() {
 
   const [group, setGroup] = useState<any>(null);
   const [members, setMembers] = useState<Member[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
+  // const [userId, setUserId] = useState<string | null>(null);
   const [inviteUsername, setInviteUsername] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) setUserId(data.user.id);
-    }
-    fetchUser();
-  }, []);
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    };
+  };
+
+  // useEffect(() => {
+  //   async function fetchUser() {
+  //     const { data } = await supabase.auth.getUser();
+  //     if (data?.user) setUserId(data.user.id);
+  //   }
+  //   fetchUser();
+  // }, []);
 
   useEffect(() => {
     if (!groupId) return;
@@ -62,12 +71,10 @@ export function GroupDetails() {
     }
 
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/invite`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({
           group_id: groupId,
           username: inviteUsername
@@ -91,12 +98,10 @@ export function GroupDetails() {
     setError("");
 
     try {
+      const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/group/leave`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": userId as string
-        },
+        headers,
         body: JSON.stringify({ group_id: groupId })
       });
 
