@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services.FriendService import FriendService
+from utils.HttpStatus import HttpStatus
 
 friend_bp = Blueprint('friend', __name__, url_prefix='/friend')
 
@@ -22,71 +23,71 @@ class FriendController:
         try:
             user_id = self.__get_user_id_func(request)
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             data = request.get_json()
             success = self.__service.send_friend_request(user_id, data['receiver_id'])
-            return jsonify({"message": "Friend request sent"}), 200 if success else 500
+            return jsonify({"message": "Friend request sent"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def accept_friend_request(self):
         try:
             user_id = self.__get_user_id_func(request)
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             data = request.get_json()
             success = self.__service.accept_friend_request(data['sender_id'], user_id)
-            return jsonify({"message": "Friend request accepted"}), 200 if success else 500
+            return jsonify({"message": "Friend request accepted"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def decline_friend_request(self):
         try:
             user_id = self.__get_user_id_func(request)
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             data = request.get_json()
             success = self.__service.decline_friend_request(data['sender_id'], user_id)
-            return jsonify({"message": "Friend request declined"}), 200 if success else 500
+            return jsonify({"message": "Friend request declined"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def get_pending_requests(self):
         try:
             user_id = request.headers.get('X-User-Id')
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             pending = self.__service.get_pending_requests(user_id)
-            return jsonify({"pending_requests": pending}), 200
+            return jsonify({"pending_requests": pending}), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def get_friends_list(self):
         try:
             user_id = self.__get_user_id_func(request)
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             friends = self.__service.get_friends_list(user_id)
-            return jsonify({"friends": friends}), 200
+            return jsonify({"friends": friends}), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def remove_friend(self):
         try:
             user_id = self.__get_user_id_func(request)
             if not user_id:
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             data = request.get_json()
             success = self.__service.remove_friend(user_id, data['friend_id'])
-            return jsonify({"message": "Friend removed"}), 200 if success else 500
+            return jsonify({"message": "Friend removed"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def search_user(self):
         try:
             query = request.args.get('query', '')
             search_type = request.args.get('type', 'username')
             results = self.__service.search_user(query, search_type)
-            return jsonify({"results": results}), 200
+            return jsonify({"results": results}), HttpStatus.OK
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
