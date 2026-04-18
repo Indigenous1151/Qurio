@@ -11,8 +11,10 @@ export function GetCurrency(){
     const navigate = useNavigate();
 
 
-    function paymentPage() {
-        navigate("/get-currency-payment");
+    function paymentPage(packageData: { coins: number; price: number }) {
+        navigate("/get-currency-payment", {
+            state: packageData
+        });
     }
 
   return(
@@ -35,13 +37,17 @@ export function GetCurrency(){
         <div className="enter-info-small-box">
             <span className="pkg-title">Package 1</span>
             <span className="pkg-price">150 coins for $2.99</span>
-            <button className="update-button" onClick={paymentPage}>Buy Now!</button>
+            <button className="update-button" onClick={() => paymentPage({ coins: 150, price: 2.99 })}>
+              Buy Now!
+            </button>
         </div>
 
         <div className="enter-info-small-box">
             <span className="pkg-title">Package 2</span>
             <span className="pkg-price">50 coins for $1.00</span>
-            <button className="update-button" onClick={paymentPage}>Buy Now!</button>
+            <button className="update-button" onClick={() =>paymentPage({ coins: 50, price: 1.00 })}>
+              Buy Now!
+            </button>
         </div>
 
       </div>
