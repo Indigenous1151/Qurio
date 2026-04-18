@@ -21,6 +21,8 @@ import { PublicOnlyRoute } from './components/PublicOnlyRoute'
 import { Groups } from "./pages/Groups";
 import { GroupDetails } from "./pages/GroupDetails";
 import { AdminPayment } from './pages/PaymentConfig'
+import { GetCurrency } from './pages/GetCurrency'
+import { GetCurrencyPayment } from './pages/GetCurrencyPayment'
 function App() {
  
 
@@ -50,7 +52,9 @@ function App() {
           <Route path= "/add-friend" element={<AddFriend/>} />
           <Route path="/groups" element={<Groups />} />
           <Route path="/groups/:groupId" element={<GroupDetails />} />
-        <Route path="/admin/payment" element={<AdminPayment />} />
+          <Route path="/admin/payment" element={<AdminPayment />} />
+          <Route path="/get-currency" element={<GetCurrency />} />
+          <Route path = "/get-currency-payment" element={<GetCurrencyPayment />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
