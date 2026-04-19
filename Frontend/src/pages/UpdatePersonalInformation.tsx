@@ -88,7 +88,6 @@ export function UpdatePersonalInformation(){
         </div>
      
         <div className = "enter-info-small-box">
-        <br></br>
         <label>
           Enter new email:
           <input

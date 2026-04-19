@@ -102,7 +102,6 @@ export function UpdatePublicInformation(){
           </label>
           </div>
           <div className = "enter-info-small-box">
-            <br></br>
           <label>
             Enter new bio:
             <input
