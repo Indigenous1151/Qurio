@@ -23,6 +23,7 @@ import { GroupDetails } from "./pages/GroupDetails";
 import { AdminPayment } from './pages/PaymentConfig'
 import { GetCurrency } from './pages/GetCurrency'
 import { GetCurrencyPayment } from './pages/GetCurrencyPayment'
+import { ViewNotification } from './pages/ViewNotification'
 function App() {
  
 
@@ -55,6 +56,7 @@ function App() {
           <Route path="/admin/payment" element={<AdminPayment />} />
           <Route path="/get-currency" element={<GetCurrency />} />
           <Route path = "/get-currency-payment" element={<GetCurrencyPayment />} />
+          <Route path="/view-notifications" element={<ViewNotification />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
