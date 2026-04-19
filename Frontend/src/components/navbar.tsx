@@ -19,6 +19,7 @@ export const Navbar = () => {
         <li><Link to="/view-friend-list" onClick={() => setOpen(false)}>Friend List</Link></li>
         <li><Link to="/groups" onClick={() => setOpen(false)}>Groups</Link></li>
         <li><Link to="/personal-statistics" onClick={() => setOpen(false)}>Personal Statistics</Link></li>
+        <li><Link to="/view-notifications" onClick={() => setOpen(false)}>Notifications</Link></li>
         <li><Link to="/logout" onClick={() => setOpen(false)}>Logout</Link></li>
       </ul>
     </div>
