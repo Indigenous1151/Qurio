@@ -8,6 +8,15 @@ export function AddFriend(){
 
   const [receiverId, setReceiverId] = useState(""); 
   const [message, setMessage] = useState("");
+  
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    };
+  };
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
   e.preventDefault();
@@ -29,14 +38,13 @@ export function AddFriend(){
       return;
     }
 
-    const response = await fetch("http://localhost:5001/friend/request", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Id": user.id
-      },
-      body: JSON.stringify({ receiver_id: receiverId })
-    });
+  const headers = await getAuthHeader();
+
+  const response = await fetch("http://localhost:5001/friend/request", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ receiver_id: receiverId })
+  });
 
     const data = await response.json();
 
@@ -69,27 +77,36 @@ export function AddFriend(){
             Add a New Friend! <br />
           </h1>
         </div>
-      <div className = "enter-info-box">
-        <div className = "instruction-text">
-            Friend's userID can be found on their "Friend List" page.
-        </div>
-      <div className = "enter-info-small-box">
-        
-         <form onSubmit={handleSubmit}>
-          Enter friend's user ID: 
-            <input
-              type="text"
-              placeholder="Enter friend's user ID"
-              value={receiverId}
-              onChange={(e) => setReceiverId(e.target.value)}
-            />
-            <br></br>
-            <br></br>
-            <button type="submit" className="update-button">Add Friend</button>
-            {message && <p>{message}</p>}
-          </form>
-      </div>  
-      </div>
+     <div className="enter-info-box">
+  
+  <div className="instruction-text">
+    Friend's userID can be found on their "Friend List" page.
+  </div>
+
+  <form onSubmit={handleSubmit} className="friend-form">
+
+    <div className="input-row">
+      <label className="label-text">
+        Enter friend's user ID:
+      </label>
+
+      <input
+        className="friend-input"
+        type="text"
+        placeholder="Enter friend's user ID"
+        value={receiverId}
+        onChange={(e) => setReceiverId(e.target.value)}
+      />
+    </div>
+
+    <button type="submit" className="update-button">
+      Add Friend
+    </button>
+
+    {message && <p className="message-text">{message}</p>}
+  </form>
+
+</div>
 
       <Footer/>
     </div>

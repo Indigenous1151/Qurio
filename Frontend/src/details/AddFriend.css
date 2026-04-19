@@ -1,37 +1,57 @@
 .enter-info-box {
-    background-color: #638F77;
-    font-size: 18px;
-    border-radius: 10px;
-    height: 400px;
-    width: 900px;
-    display: flex;
-    flex-direction: column; 
-    justify-content: flex-start;
-    align-items: center; 
-    margin: 0 auto; 
-    margin-top: 0px;       
-    padding-top: 50px;  
+  background-color: #638F77;
+  border-radius: 10px;
+  width: 900px;
+  min-height: 20px;
+  margin: 20px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.enter-info-small-box{
-    color: white;
-    height: 30px;
+.friend-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
 }
-.update-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: white;
-    color: #638F77;
-    font-weight: bold;
-    font-size: 0.875rem; 
-    padding: 0.625rem 10rem;
-    border-radius: 9999px;
-    border: none;
+
+.friend-input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  width: 250px;
+  text-align: center;
 }
 
 .instruction-text {
   color: white;
-  font-size: 23px;
-  padding-bottom: 15px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.label-text {
+  color: white;
+  font-size: 20px;
+}
+
+.update-button {
+  background-color: white;
+  color: #638F77;
+  font-weight: bold;
+  width: 45%;
+  padding: 10px 40px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.message-text {
+  color: white;
+  text-align: center;
 }
