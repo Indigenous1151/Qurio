@@ -69,13 +69,13 @@
 }
 
 .friend-requests-container {
-  border: 10px solid #638F77; /* greenish border */
+  border: 10px solid #638F77; 
   border-radius: 12px;   
-  padding: 16px;              /* inner spacing */
-  margin: 20px auto;          /* spacing from other sections */
-  max-width: 100%;           /* optional: limit width */
-  background-color: rgb(240, 238, 238);  /* subtle background */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* subtle shadow */
+  padding: 16px;           
+  margin: 20px auto;         
+  max-width: 100%;         
+  background-color: rgb(240, 238, 238); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
 }
 
 .friend-requests-container .friend-row {

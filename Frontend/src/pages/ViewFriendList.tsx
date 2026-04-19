@@ -215,25 +215,29 @@ async function acceptFriend(senderId: string, requestId: string) {
   try {
     if (!userId) return;
 
+    const headers = await getAuthHeader();
+
     const res = await fetch("http://localhost:5001/friend/accept", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Id": userId
-      },
+      headers,
       body: JSON.stringify({
         sender_id: senderId
       })
     });
 
+    const text = await res.text();
+    console.log("ACCEPT RESPONSE:", res.status, text);
+
     if (!res.ok) {
-      throw new Error("Failed to accept request");
+      throw new Error(text || "Failed to accept request");
     }
 
-    // update UI
+    // UI update ONLY after success
     setFriends(prev =>
       prev.map(f =>
-        f.request_id === requestId ? { ...f, status: "accepted" } : f
+        f.request_id === requestId
+          ? { ...f, status: "accepted" }
+          : f
       )
     );
 
@@ -247,22 +251,24 @@ async function declineFriend(senderId: string, requestId: string) {
   try {
     if (!userId) return;
 
+    const headers = await getAuthHeader();
+
     const res = await fetch("http://localhost:5001/friend/decline", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-User-Id": userId
-      },
+      headers,
       body: JSON.stringify({
         sender_id: senderId
       })
     });
 
+    const text = await res.text();
+    console.log("DECLINE RESPONSE:", res.status, text);
+
     if (!res.ok) {
-      throw new Error("Failed to decline request");
+      throw new Error(text || "Failed to decline request");
     }
 
-    // remove from UI
+    // remove from UI only after backend confirms success
     setFriends(prev =>
       prev.filter(f => f.request_id !== requestId)
     );
