@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
-import '../details/ViewFriendList.css';
+import '../details/ViewNotification.css';
 import { supabase } from '../supabaseClient/supabaseClient';
 
 type Notification = {
@@ -88,18 +88,18 @@ async function deleteNotification(id: string) {
           </div>
 
 
-      <div className = "friend-requests-container">
-        <div className="friend-list-title">
+      <div className = "notification-container">
+        <div className="notification-list-title">
         </div>        
-        <div className="friend-list">
+        <div className="notification-list">
         {notifications.length === 0 ? (
-            <p className="no-friends-message">
+            <p className="no-notification-message">
                 You currently have no notifications.
             </p>
             ) : (
             notifications.map((n) => (
-                <div key={n.notification_id} className="friend-row">
-                <span className="friend-name">{n.notification}</span>
+                <div key={n.notification_id} className="notification-row">
+                <span className="notification-name">{n.notification}</span>
 
                 <button
                     className="button"
