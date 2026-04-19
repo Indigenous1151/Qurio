@@ -185,7 +185,8 @@ class GroupController:
             }
 
             response = self.__service.create_game(game_data)
-            if not response.data:
+            
+            if not response or not response.data:
                 raise Exception("Failed to create group game.")
 
             return jsonify({"message": "Group game created"}), HttpStatus.OK
