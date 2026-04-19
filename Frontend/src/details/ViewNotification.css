@@ -1,0 +1,64 @@
+.notification-row {
+  display: flex;
+  background-color: #94caad;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #ccc;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+.notification-name {
+  font-size: 23px;
+  color: black;
+}
+
+.button {
+  background-color: #638F77;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 9999px;
+}
+
+.no-notification-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #638F77;
+  color: white;
+  font-weight: bold;
+  font-size: 18px; 
+  padding: 0.625rem 10rem;
+  border-radius: 9999px;
+  border: none;
+  margin-bottom: 50px;
+  margin-top: 30px;
+}
+
+.notification-container {
+  border: 10px solid #638F77;
+  border-radius: 12px;   
+  padding: 16px;           
+  margin: 20px auto;         
+  max-width: 100%;          
+  background-color: rgb(240, 238, 238);  
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+}
+
+.notification-container .notification-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-bottom: 1px solid #ddd; /* optional separator between rows */
+}
+
+.notification-list-title{
+  font-size: 30px;
+  color:black;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
