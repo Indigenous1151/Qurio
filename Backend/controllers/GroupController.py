@@ -20,6 +20,7 @@ class GroupController:
         group_bp.add_url_rule('/accept-invite', 'accept_invite', self.accept_invite, methods=['POST'])
         group_bp.add_url_rule('/decline-invite', 'decline_invite', self.decline_invite, methods=['POST'])
         group_bp.add_url_rule('/<group_id>', 'get_group', self.get_group, methods=['GET'])
+        group_bp.add_url_rule('/create-game', 'create_game', self.create_game, methods=['POST'])
 
     def create_group(self):
         try:
@@ -146,5 +147,48 @@ class GroupController:
             data = request.get_json()
             success = self.__service.decline_invite(data['invite_id'])
             return jsonify({"message": "Invite declined"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+    def create_game(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            data = request.get_json()
+            
+            # parse information from request
+            group_id = data["group_id"]
+            created_by = user_id # make it clear that the user is "created_by"
+            start_at = int(data["start_at"])
+            duration_hours = int(data["duration_hours"])
+            duration_ms = duration_hours * 3_600_000
+            end_at = start_at + duration_ms
+            num_questions = data["question_count"]
+            category = data.get("category", None)
+            difficulty = data.get("difficulty", None)
+
+            # store the parsed info in a dictionary
+            game_data = {
+                "group_id": group_id,
+                "created_by": created_by,
+                "start_at": start_at,
+                "duration_hours": duration_hours,
+                "end_at": end_at,
+                "game_params": {
+                    "amount": num_questions,
+                    "type": "multiple", # just support multiple choice for now
+                    "category": category,
+                    "difficulty": difficulty
+                }
+            }
+
+            response = self.__service.create_game(game_data)
+            if not response.data:
+                raise Exception("Failed to create group game.")
+
+            return jsonify({"message": "Group game created"}), HttpStatus.OK
+
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR

@@ -1,3 +1,4 @@
+import uuid
 from database.SupabaseClient import SupabaseClient
 from models.Group import Group
 from typing import Any, cast
@@ -260,7 +261,7 @@ class GroupRepository:
             if not client:
                 raise Exception("Database client is None")
 
-            group = self.get_group(group_id)  
+            group = self.get_group(group_id)
             if not group:
                 raise Exception("Group not found")
             members = group["members"]
@@ -273,3 +274,28 @@ class GroupRepository:
         except Exception as e:
             print(f"Error adding member: {e}")
             return False
+
+    def create_game(self, game_data: dict[str, Any], question_data):
+        # store game data in supabase group_games table
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            game_id = str(uuid.uuid4())
+            game_record = {
+                "game_id": game_id,
+                "group_id": game_data.get("group_id"),
+                "created_by": game_data.get("created_by"),
+                "start_at": game_data.get("start_at"),
+                "duration_hours": game_data.get("duration_hours"),
+                "end_at": game_data.get("end_at"),
+                "game_params": game_data.get("game_params", {}),
+                "questions": question_data,
+            }
+
+            result = client.table("group_games").insert(game_record).execute()
+            return result
+        except Exception as e:
+            print(f"Error creating group game: {e}")
+            return None

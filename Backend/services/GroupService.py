@@ -1,11 +1,14 @@
 from GroupRepository import GroupRepository
 from models.Group import Group
 from models.GroupInvite import GroupInvite
+from services.TriviaService import TriviaService
+from typing import Any
 
 class GroupService:
-    def __init__(self, group_repo: GroupRepository, user_repo):
+    def __init__(self, group_repo: GroupRepository, user_repo, trivia_service: TriviaService):
         self.__group_repo = group_repo
         self.__user_repo = user_repo
+        self.__trivia_service = trivia_service
 
     def create_group(self, user_id: str, group_name: str, description: str = "") -> Group:
         group = Group(group_name=group_name, owner_id=user_id, description=description)
@@ -78,3 +81,17 @@ class GroupService:
 
     def decline_invite(self, invite_id: str) -> bool:
         return self.__group_repo.update_invite_status(invite_id, "declined")
+
+    def create_game(self, game_data: dict[str, Any]):
+        # use trivia service fetch_questions call to get questions
+        question_params = game_data.get("game_params", {})
+        amount = question_params.get("amount", 10)
+        category = question_params.get("category")
+        difficulty = question_params.get("difficulty")
+
+        question_data = self.__trivia_service.fetch_questions(amount, category, difficulty)
+        if not question_data:
+            raise Exception("Failed to fetch questions for the group game")
+
+        # pass questions to create_game along with game_data
+        return self.__group_repo.create_game(game_data, question_data)
