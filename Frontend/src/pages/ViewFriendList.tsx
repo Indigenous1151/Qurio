@@ -56,33 +56,44 @@ export function ViewFriendList(){
 
     fetchUser();
   }, []);
+useEffect(() => {
+  if (!userId) return;
 
-  useEffect(() => {
-    if (!userId) return;
+  async function fetchAllFriends() {
+    try {
+      const headers = await getAuthHeader();
 
-    async function fetchFriends() {
-      try {
-        const headers = await getAuthHeader();
-        const res = await fetch("http://localhost:5001/friend/list", {
+      const [friendsRes, pendingRes] = await Promise.all([
+        fetch("http://localhost:5001/friend/list", {
           method: "GET",
           headers
-        });
+        }),
+        fetch("http://localhost:5001/friend/pending", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Id": userId as string
+          }
+        })
+      ]);
 
-        if (!res.ok) {
-          throw new Error(`Error: ${res.status}`);
-        }
+      const friendsData = await friendsRes.json();
+      const pendingData = await pendingRes.json();
 
-        const data = await res.json();
+      const allFriends = [
+        ...(friendsData.friends || []),
+        ...(pendingData.pending_requests || [])
+      ];
 
-        setFriends(data.friends);
+      setFriends(allFriends);
 
-      } catch (err) {
-        console.error("Failed to fetch friends:", err);
-      }
+    } catch (err) {
+      console.error("Failed to fetch friends:", err);
     }
+  }
 
-    fetchFriends();
-  }, [userId]);
+  fetchAllFriends();
+}, [userId]);
 
  useEffect(() => {
   if (!userId) return;
@@ -105,8 +116,9 @@ export function ViewFriendList(){
       console.log("Fetched pending friends:", data);
 
       // Ensure it's always an array
-      const pendingArray = Array.isArray(data.pending_requests) ? data.pending_requests : [];
-
+      const pendingArray = Array.isArray(data.pending_requests)
+        ? data.pending_requests
+        : [];
 
       // Merge with existing friends without duplicates
       setFriends(prev => {
@@ -158,8 +170,8 @@ export function ViewFriendList(){
   }, [friends, userId]);
 
   // Filter accepted friends
-  const acceptedFriends = friends.filter(friend => 
-    friend.status === "accepted" //&& (friend.sender_id === userId || friend.receiver_id === userId)
+  const acceptedFriends = friends.filter(
+    f => f.status === "accepted"
   );
 
   // Filter pending friends 
