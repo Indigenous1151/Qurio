@@ -5,6 +5,14 @@ import { Footer } from '../components/Footer';
 import '../details/UpdateInformation.css';
 import { supabase } from '../supabaseClient/supabaseClient'
 
+async function getAuthHeader() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${session?.access_token}`
+  };
+}
+
 export function UpdatePublicInformation(){
 
   const [username, setUsername] = useState("");
@@ -42,12 +50,10 @@ export function UpdatePublicInformation(){
             return;
         }
 
+        const headers = await getAuthHeader();
         const response = await fetch('http://localhost:5001/user/profile', {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-User-Id': user.id
-            },
+            headers,
             body: JSON.stringify({
                 username: username,
                 bio: bio
@@ -96,7 +102,6 @@ export function UpdatePublicInformation(){
           </label>
           </div>
           <div className = "enter-info-small-box">
-            <br></br>
           <label>
             Enter new bio:
             <input

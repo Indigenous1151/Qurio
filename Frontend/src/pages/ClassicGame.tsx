@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "../components/navbar";
 import { Footer } from "../components/Footer";
-import { supabase } from "../client/supabase";
+import { supabase } from "../supabaseClient/supabaseClient";
 
 const CATEGORIES = [
   { id: 9, name: "General Knowledge" },

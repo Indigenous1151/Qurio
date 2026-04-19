@@ -20,12 +20,15 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { PublicOnlyRoute } from './components/PublicOnlyRoute'
 import { Groups } from "./pages/Groups";
 import { GroupDetails } from "./pages/GroupDetails";
-
+import { AdminPayment } from './pages/PaymentConfig'
+import { GetCurrency } from './pages/GetCurrency'
+import { GetCurrencyPayment } from './pages/GetCurrencyPayment'
+import { ViewNotification } from './pages/ViewNotification'
 function App() {
  
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         {/* Public-only routes */}
         <Route element={<PublicOnlyRoute />}>
@@ -50,6 +53,10 @@ function App() {
           <Route path= "/add-friend" element={<AddFriend/>} />
           <Route path="/groups" element={<Groups />} />
           <Route path="/groups/:groupId" element={<GroupDetails />} />
+          <Route path="/admin/payment" element={<AdminPayment />} />
+          <Route path="/get-currency" element={<GetCurrency />} />
+          <Route path = "/get-currency-payment" element={<GetCurrencyPayment />} />
+          <Route path="/view-notifications" element={<ViewNotification />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />

@@ -20,6 +20,15 @@ export function ViewFriendList(){
   const [userId, setUserId] = useState<string | null>(null);
   const [usernames, setUsernames] = useState<{ [key: string]: string }>({});
 
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Not authenticated");
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${session.access_token}`
+    };
+  };
+
 
   function addFriend() {
     navigate("/add-friend");
@@ -47,34 +56,85 @@ export function ViewFriendList(){
 
     fetchUser();
   }, []);
+useEffect(() => {
+  if (!userId) return;
 
-  useEffect(() => {
-    if (!userId) return;
+  async function fetchAllFriends() {
+    try {
+      const headers = await getAuthHeader();
 
-    async function fetchFriends() {
-      try {
-        const res = await fetch("http://localhost:5001/friend/list", {
+      const [friendsRes, pendingRes] = await Promise.all([
+        fetch("http://localhost:5001/friend/list", {
+          method: "GET",
+          headers
+        }),
+        fetch("http://localhost:5001/friend/pending", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             "X-User-Id": userId as string
           }
-        });
+        })
+      ]);
 
-        if (!res.ok) {
-          throw new Error(`Error: ${res.status}`);
-        }
+      const friendsData = await friendsRes.json();
+      const pendingData = await pendingRes.json();
 
-        const data = await res.json();
-        setFriends(data.friends);
+      const allFriends = [
+        ...(friendsData.friends || []),
+        ...(pendingData.pending_requests || [])
+      ];
 
-      } catch (err) {
-        console.error("Failed to fetch friends:", err);
-      }
+      setFriends(allFriends);
+
+    } catch (err) {
+      console.error("Failed to fetch friends:", err);
     }
+  }
 
-    fetchFriends();
-  }, [userId]);
+  fetchAllFriends();
+}, [userId]);
+
+ useEffect(() => {
+  if (!userId) return;
+
+  async function fetchPendingFriends() {
+    try {
+      const res = await fetch("http://localhost:5001/friend/pending", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId as string
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch pending friends: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log("Fetched pending friends:", data);
+
+      // Ensure it's always an array
+      const pendingArray = Array.isArray(data.pending_requests)
+        ? data.pending_requests
+        : [];
+
+      // Merge with existing friends without duplicates
+      setFriends(prev => {
+        const newFriends = pendingArray.filter(
+          (p: Friend) => !prev.some(f => f.request_id === p.request_id)
+        );
+        return [...prev, ...newFriends];
+      });
+
+    } catch (err) {
+      console.error("Error fetching pending friends:", err);
+    }
+  }
+
+  fetchPendingFriends();
+}, [userId]);
 
   // getting usernames from table
   useEffect(() => {
@@ -110,20 +170,27 @@ export function ViewFriendList(){
   }, [friends, userId]);
 
   // Filter accepted friends
-  const acceptedFriends = friends.filter(friend => 
-    friend.status === "accepted" //&& 
-    //(friend.sender_id === userId || friend.receiver_id === userId)
+  const acceptedFriends = friends.filter(
+    f => f.status === "accepted"
   );
 
+  // Filter pending friends 
+const pendingFriends = friends.filter(friend => {
+  console.log("Friend Status:", friend.status); // Logs the status of each friend
+  return friend.status === "pending" && friend.receiver_id === userId;
+});
+  console.log("Pending friends:", pendingFriends);
+
+// Logic for removing friends from the friend list
 async function removeFriend(friendId: string, requestId: string) {
   try {
     if (!userId) return;
 
+    const headers = await getAuthHeader();
     const res = await fetch("http://localhost:5001/friend/remove", {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json",
-        "X-User-Id": userId
+        ...headers
       },
       body: JSON.stringify({
         friend_id: friendId
@@ -140,6 +207,74 @@ async function removeFriend(friendId: string, requestId: string) {
 
   } catch (err) {
     console.error("Error removing friend:", err);
+  }
+}
+
+// logic for accepting friend requests s
+async function acceptFriend(senderId: string, requestId: string) {
+  try {
+    if (!userId) return;
+
+    const headers = await getAuthHeader();
+
+    const res = await fetch("http://localhost:5001/friend/accept", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        sender_id: senderId
+      })
+    });
+
+    const text = await res.text();
+    console.log("ACCEPT RESPONSE:", res.status, text);
+
+    if (!res.ok) {
+      throw new Error(text || "Failed to accept request");
+    }
+
+    // UI update ONLY after success
+    setFriends(prev =>
+      prev.map(f =>
+        f.request_id === requestId
+          ? { ...f, status: "accepted" }
+          : f
+      )
+    );
+
+  } catch (err) {
+    console.error("Error accepting friend:", err);
+  }
+}
+
+// logic for declining friend requests
+async function declineFriend(senderId: string, requestId: string) {
+  try {
+    if (!userId) return;
+
+    const headers = await getAuthHeader();
+
+    const res = await fetch("http://localhost:5001/friend/decline", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        sender_id: senderId
+      })
+    });
+
+    const text = await res.text();
+    console.log("DECLINE RESPONSE:", res.status, text);
+
+    if (!res.ok) {
+      throw new Error(text || "Failed to decline request");
+    }
+
+    // remove from UI only after backend confirms success
+    setFriends(prev =>
+      prev.filter(f => f.request_id !== requestId)
+    );
+
+  } catch (err) {
+    console.error("Error declining friend:", err);
   }
 }
 
@@ -172,6 +307,46 @@ async function removeFriend(friendId: string, requestId: string) {
             <br></br>
         </div>
 
+      <div className = "friend-requests-container">
+        <div className="friend-list-title">
+          Pending Friend Requests
+        </div>        
+        <div className="friend-list">
+         {pendingFriends.length === 0 ? (
+            <p className="no-friends-message">
+              You currently have no pending friend requests.
+            </p>
+          ) : (
+            pendingFriends.map(friend => {
+              const friendId = friend.sender_id;
+              return (
+                <div key={friend.request_id} className="friend-row">
+                  <span className="friend-name">{usernames[friendId] || friendId}</span>
+                  <div className ="button-group">
+                   <button
+                    className="button"
+                    onClick={() => acceptFriend(friend.sender_id, friend.request_id)}>
+                    Accept
+                  </button>
+
+                  <button
+                    className="button"
+                    onClick={() => declineFriend(friend.sender_id, friend.request_id)}>
+                    Decline
+                  </button>
+
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+        
+      <div className = "friend-requests-container">
+        <div className="friend-list-title">
+        Your Friends
+        </div>
         <div className="friend-list">
          {acceptedFriends.length === 0 ? (
             <p className="no-friends-message">
@@ -187,7 +362,7 @@ async function removeFriend(friendId: string, requestId: string) {
               return (
                 <div key={friend.request_id} className="friend-row">
                   <span className="friend-name">{usernames[friendId] || friendId}</span>
-                  <button className="remove-button" onClick={() => removeFriend(friendId, friend.request_id)}>
+                  <button className="button" onClick={() => removeFriend(friendId, friend.request_id)}>
                     Remove Friend
                   </button>
                 </div>
@@ -195,6 +370,7 @@ async function removeFriend(friendId: string, requestId: string) {
             })
           )}
         </div>
+      </div>
 
       <Footer/>
     </div>
