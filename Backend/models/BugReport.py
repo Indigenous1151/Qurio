@@ -20,9 +20,4 @@ class BugReport:
             self.status = status
 
     def to_dict(self) -> dict:
-        return {
-            "report_id": self.report_id,
-            "sender_id": self.sender_id,
-            "bug_report": self.bug_report,
-            "status": self.status,
-        }
+        return self.__dict__
