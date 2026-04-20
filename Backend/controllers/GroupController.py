@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify
+from datetime import datetime, timedelta, timezone
 from services.GroupService import GroupService
+from flask import Blueprint, request, jsonify
 from utils.HttpStatus import HttpStatus
 
 group_bp = Blueprint('group', __name__, url_prefix='/group')
@@ -157,17 +158,28 @@ class GroupController:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
             data = request.get_json()
-            
+
             # parse information from request
             group_id = data["group_id"]
             created_by = user_id # make it clear that the user is "created_by"
-            start_at = int(data["start_at"])
+            start_at = datetime.fromisoformat(
+                data["start_at"].replace("Z", "+00:00")
+            )
             duration_hours = int(data["duration_hours"])
-            duration_ms = duration_hours * 3_600_000
-            end_at = start_at + duration_ms
+            end_at = start_at + timedelta(hours=duration_hours)
             num_questions = data["question_count"]
             category = data.get("category", None)
             difficulty = data.get("difficulty", None)
+
+            # determine the status of the game
+            now = datetime.now(timezone.utc)
+
+            if now < start_at:
+                status = "upcoming"
+            elif start_at <= now <= end_at:
+                status = "active"
+            else:
+                status = "finished"
 
             # store the parsed info in a dictionary
             game_data = {
@@ -176,6 +188,7 @@ class GroupController:
                 "start_at": start_at,
                 "duration_hours": duration_hours,
                 "end_at": end_at,
+                "status": status,
                 "game_params": {
                     "amount": num_questions,
                     "type": "multiple", # just support multiple choice for now
@@ -185,11 +198,28 @@ class GroupController:
             }
 
             response = self.__service.create_game(game_data)
-            
+
             if not response or not response.data:
                 raise Exception("Failed to create group game.")
 
             return jsonify({"message": "Group game created"}), HttpStatus.OK
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+    def get_games(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            data = request.get_json()
+
+            group_id = data.get("group_id", None)
+            if not group_id:
+                return jsonify({"error": "Group ID not found"}), HttpStatus.BAD_REQUEST
+
+            return self.__service.get_games(user_id, group_id)
 
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR

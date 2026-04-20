@@ -283,19 +283,60 @@ class GroupRepository:
                 raise Exception("Database client is None")
 
             game_id = str(uuid.uuid4())
-            game_record = {
+            group_games_row_data = {
                 "game_id": game_id,
                 "group_id": game_data.get("group_id"),
                 "created_by": game_data.get("created_by"),
                 "start_at": game_data.get("start_at"),
                 "duration_hours": game_data.get("duration_hours"),
                 "end_at": game_data.get("end_at"),
+                "status": game_data.get("status", "invalid"), # alternative will prevent row insertion
                 "game_params": game_data.get("game_params", {}),
                 "questions": question_data,
             }
 
-            result = client.table("group_games").insert(game_record).execute()
+            result = client.table("group_games").insert(group_games_row_data).execute()
             return result
+
         except Exception as e:
             print(f"Error creating group game: {e}")
             return None
+
+    def get_games(self, user_id: str, group_id: str):
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            # get list of members in group from database
+            # NOTE: this list is a list of rows returned by supabase,
+            # not a list of members directly
+            group_members: list = (
+                client.table("groups")
+                .select("members")
+                .eq("group_id", group_id)
+                .execute()
+            ).data
+
+            if not group_members:
+                raise Exception("Could not get members in group")
+
+            # should only be one row
+            group_members = group_members[0].get("members", [])
+
+            if user_id not in group_members:
+                raise Exception("User is not part of the group")
+
+            result = (
+                client.table("group_games")
+                .select("*")
+                .eq("group_id", group_id)
+                .in_("status", ["upcoming", "active"])
+                .execute()
+            )
+
+            return result.data or []
+
+        except Exception as e:
+            print(f"Error getting games: {e}")
+            return []
