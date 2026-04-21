@@ -302,60 +302,46 @@ class GroupRepository:
             print(f"Error creating group game: {e}")
             raise
 
-    def get_active_games(self, user_id: str, group_id: str):
+    def get_games(self, user_id: str, group_id: str):
         try:
             client = self.__db_client.get_client()
             if not client:
                 raise Exception("Database client is None")
 
-            return self.get_games_helper(client, user_id, group_id, status="active")
+            # Verify user is part of the group
+            result = (
+                client.table("groups")
+                .select("members")
+                .eq("group_id", group_id)
+                .single()
+                .execute()
+            )
+
+            if not isinstance(result.data, dict):
+                raise Exception("Invalid group data format")
+
+            group_members = result.data.get("members", [])
+
+            if not isinstance(group_members, list):
+                raise Exception("Invalid members format")
+
+            if user_id not in group_members:
+                raise Exception("User is not part of the group")
+
+            # Fetch games for all three statuses
+            games_data = {}
+            for status in ["active", "upcoming", "finished"]:
+                result = (
+                    client.table("group_games")
+                    .select("*")
+                    .eq("group_id", group_id)
+                    .eq("status", status)
+                    .execute()
+                )
+                games_data[status] = result.data or []
+
+            return games_data
 
         except Exception as e:
             print(f"Error getting games: {e}")
             raise
-
-    def get_upcoming_games(self, user_id: str, group_id: str):
-        try:
-            client = self.__db_client.get_client()
-            if not client:
-                raise Exception("Database client is None")
-
-            return self.get_games_helper(client, user_id, group_id, status="upcoming")
-
-        except Exception as e:
-            print(f"Error getting games: {e}")
-            raise
-
-    def get_games_helper(self, client, user_id: str, group_id: str, status: str):
-        # get list of members in group from database
-        # NOTE: this list is a list of rows returned by supabase,
-        # not a list of members directly
-        result = (
-            client.table("groups")
-            .select("members")
-            .eq("group_id", group_id)
-            .single()
-            .execute()
-        )
-
-        # should only be one row
-        group_members = result.data.get("members", [])
-
-        if not isinstance(group_members, list):
-            raise Exception("Invalid members format")
-
-        if user_id not in group_members:
-            raise Exception("User is not part of the group")
-
-        result = (
-            client.table("group_games")
-            .select("*")
-            .eq("group_id", group_id)
-            .eq("status", status)
-            .execute()
-        )
-        
-        if hasattr(result, "error") and result.error:
-            raise Exception(result.error.message)
-        
-        return result.data or []

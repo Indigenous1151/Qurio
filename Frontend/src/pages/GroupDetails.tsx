@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../details/Groups.css";
 import { supabase } from '../supabaseClient/supabaseClient';
+import type { Game } from "../types/Game";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -10,9 +11,57 @@ type Member = {
   username: string;
 };
 
-type Game = {
-  // TODO: Create this object for the frontend
-}
+type GameState = {
+  active: Game[];
+  upcoming: Game[];
+  finished: Game[];
+};
+
+type GameCardProps = {
+  game: Game;
+  type: "active" | "upcoming";
+};
+
+const GameCard = ({ game, type }: GameCardProps) => {
+  return (
+    <div className="game-item">
+      <div className="game-info">
+        <p className="game-title">
+          Questions: {game.game_params?.question_count ?? "N/A"}
+        </p>
+
+        {game.game_params?.category && (
+          <p className="game-detail">
+            Category: {game.game_params.category}
+          </p>
+        )}
+
+        {game.game_params?.difficulty && (
+          <p className="game-detail">
+            Difficulty: {game.game_params.difficulty}
+          </p>
+        )}
+
+        {type === "active" && (
+          <p className="game-detail">
+            Ends: {new Date(game.end_at).toLocaleString()}
+          </p>
+        )}
+
+        {type === "upcoming" && (
+          <>
+            <p className="game-detail">
+              Starts: {new Date(game.start_at).toLocaleString()}
+            </p>
+            <p className="game-detail">
+              Ends: {new Date(game.end_at).toLocaleString()}
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export function GroupDetails() {
   const { groupId } = useParams();
@@ -24,7 +73,11 @@ export function GroupDetails() {
   const [inviteUsername, setInviteUsername] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [games, setGames] = useState<Game[]>([]);
+  const [games, setGames] = useState<GameState>({
+    active: [],
+    upcoming: [],
+    finished: []
+  });
 
   const getAuthHeader = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -34,14 +87,6 @@ export function GroupDetails() {
       "Authorization": `Bearer ${session.access_token}`
     };
   };
-
-  // useEffect(() => {
-  //   async function fetchUser() {
-  //     const { data } = await supabase.auth.getUser();
-  //     if (data?.user) setUserId(data.user.id);
-  //   }
-  //   fetchUser();
-  // }, []);
 
   useEffect(() => {
     if (!groupId) return;
@@ -57,14 +102,38 @@ export function GroupDetails() {
             .select("user_id, username")
             .in("user_id", data.group.members);
           setMembers(profiles || []);
-          // fetch games for the group
-          setGames(games || []);
         }
       } catch (err) {
         console.error("Error fetching group:", err);
       }
     }
     fetchGroup();
+  }, [groupId]);
+
+  // get active and upcoming games, then determine the number of each
+  useEffect(() => {
+    if (!groupId) return;
+    const fetchGames = async () => {
+      try {
+        const headers = await getAuthHeader();
+        const res = await fetch(`${API_URL}/group/games?group_id=${groupId}`, {
+          headers
+        });
+        console.log("Fetch games response: ", res);
+        console.log("Fetch games content type: ", res.headers.get("Content-Type"));
+        const data = await res.json()
+
+        setGames({
+          active: data.active,
+          upcoming: data.upcoming,
+          finished: data.finished
+        });
+      } catch (err) {
+        console.error("Error fetching games: ", err);
+      }
+    };
+
+    fetchGames();
   }, [groupId]);
 
   const handleInviteUser = async (e: React.FormEvent) => {
@@ -158,10 +227,37 @@ export function GroupDetails() {
 
           {/* Group Games */}
           <section className="groups-card">
-            <h2>Upcoming Games</h2>
-            
-            <h2>Active Games</h2>
-          </section>
+          <h2>Group Games</h2>
+
+          {/* No games message */}
+          {games.active.length === 0 && games.upcoming.length === 0 && (
+            <p>No games available</p>
+          )}
+
+          {/* Active Games */}
+          {games.active.length > 0 && (
+            <div className="games-subsection">
+              <h3>Active Games</h3>
+              <div className="games-list">
+                {games.active.map((game) => (
+                  <GameCard key={game.game_id} game={game} type="active" />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Games */}
+          {games.upcoming.length > 0 && (
+            <div className="games-subsection">
+              <h3>Upcoming Games</h3>
+              <div className="games-list">
+                {games.upcoming.map((game) => (
+                  <GameCard key={game.game_id} game={game} type="upcoming" />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
 
           {/* Invite User */}
           <section className="groups-card">
