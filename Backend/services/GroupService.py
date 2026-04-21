@@ -96,5 +96,8 @@ class GroupService:
         # pass questions to create_game along with game_data
         return self.__group_repo.create_game(game_data, question_data)
 
-    def get_games(self, user_id: str, group_id: str):
-        return self.__group_repo.get_games(user_id, group_id)
+    def get_active_games(self, user_id: str, group_id: str):
+        return self.__group_repo.get_active_games(user_id, group_id)
+    
+    def get_upcoming_games(self, user_id: str, group_id: str):
+        return self.__group_repo.get_upcoming_games(user_id, group_id)

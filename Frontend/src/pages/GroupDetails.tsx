@@ -10,6 +10,10 @@ type Member = {
   username: string;
 };
 
+type Game = {
+  // TODO: Create this object for the frontend
+}
+
 export function GroupDetails() {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -20,6 +24,7 @@ export function GroupDetails() {
   const [inviteUsername, setInviteUsername] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [games, setGames] = useState<Game[]>([]);
 
   const getAuthHeader = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -52,6 +57,8 @@ export function GroupDetails() {
             .select("user_id, username")
             .in("user_id", data.group.members);
           setMembers(profiles || []);
+          // fetch games for the group
+          setGames(games || []);
         }
       } catch (err) {
         console.error("Error fetching group:", err);
@@ -133,6 +140,7 @@ export function GroupDetails() {
         {error && <div className="groups-alert error">{error}</div>}
 
         <div className="groups-grid single-column">
+          {/* Members */}
           <section className="groups-card">
             <h2>Members</h2>
             {members.length === 0 ? (
@@ -148,6 +156,14 @@ export function GroupDetails() {
             )}
           </section>
 
+          {/* Group Games */}
+          <section className="groups-card">
+            <h2>Upcoming Games</h2>
+            
+            <h2>Active Games</h2>
+          </section>
+
+          {/* Invite User */}
           <section className="groups-card">
             <h2>Invite User to Group</h2>
             <form onSubmit={handleInviteUser} className="group-form">
@@ -165,6 +181,7 @@ export function GroupDetails() {
             </form>
           </section>
 
+          {/* Leave Group */}
           <section className="groups-card danger-card">
             <h2>Leave Group</h2>
             <p style={{ paddingBottom: "10px" }} className="empty-text">

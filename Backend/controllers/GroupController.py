@@ -22,6 +22,8 @@ class GroupController:
         group_bp.add_url_rule('/decline-invite', 'decline_invite', self.decline_invite, methods=['POST'])
         group_bp.add_url_rule('/<group_id>', 'get_group', self.get_group, methods=['GET'])
         group_bp.add_url_rule('/create-game', 'create_game', self.create_game, methods=['POST'])
+        group_bp.add_url_rule('/active-games', 'active games', self.get_active_games, methods=['GET'])
+        group_bp.add_url_rule('/upcoming-games', 'upcoming games', self.get_upcoming_games, methods=['GET'])
 
     def create_group(self):
         try:
@@ -207,19 +209,32 @@ class GroupController:
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
-    def get_games(self):
+    def get_active_games(self):
         try:
             user_id = self.get_user_id(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
-            data = request.get_json()
-
-            group_id = data.get("group_id", None)
+            group_id = request.args.get('group_id')
             if not group_id:
-                return jsonify({"error": "Group ID not found"}), HttpStatus.BAD_REQUEST
+                return jsonify({"error": "group_id query parameter is required"}), HttpStatus.BAD_REQUEST
 
-            return self.__service.get_games(user_id, group_id)
+            active_games = self.__service.get_active_games(user_id, group_id)
+            return jsonify({"active_games": active_games}), HttpStatus.OK
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+        
+    def get_upcoming_games(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
+            group_id = request.args.get('group_id')
+            if not group_id:
+                return jsonify({"error": "group_id query parameter is required"}), HttpStatus.BAD_REQUEST
+
+            upcoming_games = self.__service.get_upcoming_games(user_id, group_id)
+            return jsonify({"upcoming_games": upcoming_games}), HttpStatus.OK
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR

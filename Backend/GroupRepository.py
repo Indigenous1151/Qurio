@@ -41,7 +41,7 @@ class GroupRepository:
             return {}
         except Exception as e:
             print(f"Error getting group: {e}")
-            return {}
+            raise
 
     def get_user_groups(self, user_id: str) -> list[dict[str, Any]]:
         try:
@@ -55,7 +55,7 @@ class GroupRepository:
             return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting user groups: {e}")
-            return []
+            raise
 
     def get_group_by_invite_code(self, invite_code: str) -> list[dict[str, Any]]:
         try:
@@ -73,7 +73,7 @@ class GroupRepository:
             return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting group invite: {e}")
-            return []
+            raise
 
     def get_group_invites(self, user_id: str) -> list[dict[str, Any]]:
         try:
@@ -101,7 +101,7 @@ class GroupRepository:
             return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting group invites: {e}")
-            return []
+            raise
 
     def add_user_to_group(self, group_id: str, user_id: str):
         try:
@@ -137,7 +137,7 @@ class GroupRepository:
 
         except Exception as e:
             print(f"Error adding user to group: {e}")
-            return None
+            raise
 
     def mark_invite_used(self, invite_code: str):
         try:
@@ -158,7 +158,7 @@ class GroupRepository:
 
         except Exception as e:
             print(f"Error updating invite status: {e}")
-            return []
+            raise
 
     def remove_user_from_group(self, group_id: str, user_id: str):
         try:
@@ -193,7 +193,7 @@ class GroupRepository:
 
         except Exception as e:
             print(f"Error removing user from group: {e}")
-            return None
+            raise
 
     def save_invite(self, invite) -> bool:
         try:
@@ -239,7 +239,7 @@ class GroupRepository:
             return result.data
         except Exception as e:
             print(f"Error getting pending invites: {e}")
-            return []
+            raise
 
     def update_invite_status(self, invite_id: str, status: str) -> bool:
         try:
@@ -300,43 +300,62 @@ class GroupRepository:
 
         except Exception as e:
             print(f"Error creating group game: {e}")
-            return None
+            raise
 
-    def get_games(self, user_id: str, group_id: str):
+    def get_active_games(self, user_id: str, group_id: str):
         try:
             client = self.__db_client.get_client()
             if not client:
                 raise Exception("Database client is None")
 
-            # get list of members in group from database
-            # NOTE: this list is a list of rows returned by supabase,
-            # not a list of members directly
-            group_members: list = (
-                client.table("groups")
-                .select("members")
-                .eq("group_id", group_id)
-                .execute()
-            ).data
-
-            if not group_members:
-                raise Exception("Could not get members in group")
-
-            # should only be one row
-            group_members = group_members[0].get("members", [])
-
-            if user_id not in group_members:
-                raise Exception("User is not part of the group")
-
-            result = (
-                client.table("group_games")
-                .select("*")
-                .eq("group_id", group_id)
-                .in_("status", ["upcoming", "active"])
-                .execute()
-            )
-
-            return result.data or []
+            return self.get_games_helper(client, user_id, group_id, status="active")
 
         except Exception as e:
             print(f"Error getting games: {e}")
-            return []
+            raise
+
+    def get_upcoming_games(self, user_id: str, group_id: str):
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            return self.get_games_helper(client, user_id, group_id, status="upcoming")
+
+        except Exception as e:
+            print(f"Error getting games: {e}")
+            raise
+
+    def get_games_helper(self, client, user_id: str, group_id: str, status: str):
+        # get list of members in group from database
+        # NOTE: this list is a list of rows returned by supabase,
+        # not a list of members directly
+        result = (
+            client.table("groups")
+            .select("members")
+            .eq("group_id", group_id)
+            .single()
+            .execute()
+        )
+
+        # should only be one row
+        group_members = result.data.get("members", [])
+
+        if not isinstance(group_members, list):
+            raise Exception("Invalid members format")
+
+        if user_id not in group_members:
+            raise Exception("User is not part of the group")
+
+        result = (
+            client.table("group_games")
+            .select("*")
+            .eq("group_id", group_id)
+            .eq("status", status)
+            .execute()
+        )
+        
+        if hasattr(result, "error") and result.error:
+            raise Exception(result.error.message)
+        
+        return result.data or []
