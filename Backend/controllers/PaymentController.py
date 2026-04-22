@@ -20,6 +20,7 @@ class PaymentController:
         payment_bp.add_url_rule('/purchase', 'purchase_currency', self.purchase_currency, methods=['POST'])
         payment_bp.add_url_rule('/types', 'get_available_payment_types', self.get_available_payment_types, methods=['GET'])
         payment_bp.add_url_rule('/history', 'get_payment_history', self.get_payment_history, methods=['GET'])
+        payment_bp.add_url_rule('/admin/logs', 'get_admin_payment_logs', self.get_admin_payment_logs, methods=['GET'])
 
     def is_admin(self):
         
@@ -119,3 +120,18 @@ class PaymentController:
             return jsonify({"payments": history}), HttpStatus.OK
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+        
+    def get_admin_payment_logs(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            logs = self.__service.get_payment_logs(user_id)
+            return jsonify({"payments": logs}), HttpStatus.OK
+
+        except Exception as e:
+            if "Unauthorized" in str(e):
+                return jsonify({"error": str(e)}), HttpStatus.UNAUTHORIZED
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+    
