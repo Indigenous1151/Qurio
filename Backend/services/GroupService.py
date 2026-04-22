@@ -87,7 +87,7 @@ class GroupService:
     def create_game(self, game_data: dict[str, Any]):
         # use trivia service fetch_questions call to get questions
         question_params = game_data.get("game_params", {})
-        amount = question_params.get("amount", 10)
+        amount = question_params.get("question_count", 10)
         category = question_params.get("category")
         difficulty = question_params.get("difficulty")
 

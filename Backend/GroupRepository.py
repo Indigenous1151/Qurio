@@ -283,14 +283,24 @@ class GroupRepository:
                 raise Exception("Database client is None")
 
             game_id = str(uuid.uuid4())
+            # Convert datetime objects to ISO 8601 strings for Supabase timestamptz
+            start_at = game_data.get("start_at")
+            end_at = game_data.get("end_at")
+            
+            # If they're datetime objects, convert to ISO format string
+            if start_at and hasattr(start_at, 'isoformat'):
+                start_at = start_at.isoformat()
+            if end_at and hasattr(end_at, 'isoformat'):
+                end_at = end_at.isoformat()
+            
             group_games_row_data = {
                 "game_id": game_id,
                 "group_id": game_data.get("group_id"),
                 "created_by": game_data.get("created_by"),
-                "start_at": game_data.get("start_at"),
+                "start_at": start_at,
                 "duration_hours": game_data.get("duration_hours"),
-                "end_at": game_data.get("end_at"),
-                "status": game_data.get("status", "invalid"), # alternative will prevent row insertion
+                "end_at": end_at,
+                "status": game_data.get("status", "invalid"),
                 "game_params": game_data.get("game_params", {}),
                 "questions": question_data,
             }
