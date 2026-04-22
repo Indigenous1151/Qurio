@@ -1,8 +1,9 @@
 class PublicInformation:
-    def __init__(self, user_id: str, username: str, bio: str):
+    def __init__(self, user_id: str, username: str, bio: str, currency: int):
         self.__user_id = user_id
         self.__username = username
         self.__bio = bio
+        self.__currency = currency
 
     def get_user_id(self) -> str:
         return self.__user_id
@@ -18,3 +19,9 @@ class PublicInformation:
 
     def set_bio(self, bio: str) -> None:
         self.__bio = bio
+
+    def get_currency(self):
+        return self.__currency
+
+    def set_currency(self, currency: int):
+        self.__currency = currency
