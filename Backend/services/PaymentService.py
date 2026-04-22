@@ -98,3 +98,8 @@ class PaymentService:
 
     def get_payment_history(self, user_id: str) -> list:
         return self.__repo.get_payment_history(user_id)
+    
+    def get_payment_logs(self, user_id: str) -> list:
+        self.__check_admin(user_id)
+        return self.__repo.get_all_payment_logs_detailed()
+    
