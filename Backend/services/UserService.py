@@ -19,11 +19,13 @@ class UserService:
             raise Exception("Failed to update personal information")
         return personal_info
 
-    def update_public_profile(self, user_id: str, username: str, bio: str = '') -> PublicInformation:
+    def update_public_profile(self, user_id: str, username: str, bio: str, currency: int) -> PublicInformation:
         public_info = PublicInformation(
             user_id=user_id,
             username=username,
-            bio=bio
+            bio=bio,
+            currency=currency
+
         )
         success = self.__repo.save_public_info(public_info)
         if not success:

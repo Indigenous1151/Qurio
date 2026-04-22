@@ -20,7 +20,8 @@ class AuthService:
         public_info = PublicInformation(
             user_id=user_id,
             username=username,
-            bio=""
+            bio="",
+            currency=0
         )
 
         return User(personal_info, public_info)
@@ -41,7 +42,8 @@ class AuthService:
         public_info = PublicInformation(
             user_id=user_id,
             username=public_data["username"],
-            bio=public_data["bio"]
+            bio=public_data["bio"],
+            currency=public_data["currency"]
         )
 
         return User(personal_info=personal, public_info=public_info)
