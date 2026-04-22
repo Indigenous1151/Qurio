@@ -83,7 +83,7 @@ class PaymentService:
         payment = Payment(
             user_id=user_id,
             amount=amount,
-            currency=currency,
+            currency_purchased=currency,
             payment_type=payment_type
         )
 
