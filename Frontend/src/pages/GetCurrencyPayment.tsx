@@ -80,7 +80,7 @@ export function GetCurrencyPayment() {
         },
         body: JSON.stringify({
           amount: packageData.price,
-          currency: packageData.coins,
+          currency_purchased: packageData.coins,
           payment_type: selectedMethod,
           card_number: cardNumber,
           expiry: expiry,

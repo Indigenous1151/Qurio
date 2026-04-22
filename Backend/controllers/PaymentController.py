@@ -85,7 +85,7 @@ class PaymentController:
             payment = self.__service.purchase_currency(
                 user_id=user_id,
                 amount=data["amount"],
-                currency=data["currency"],
+                currency_purchased=data["currency_purchased"],
                 payment_type=data["payment_type"],
                 card_number=data["card_number"],
                 expiry=data["expiry"],
