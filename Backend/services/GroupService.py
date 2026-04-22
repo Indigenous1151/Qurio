@@ -1,5 +1,5 @@
 from click import group
-
+from datetime import datetime, timezone
 from GroupRepository import GroupRepository
 from models.Group import Group
 from models.GroupInvite import GroupInvite
@@ -99,4 +99,29 @@ class GroupService:
         return self.__group_repo.create_game(game_data, question_data)
 
     def get_games(self, user_id: str, group_id: str):
-        return self.__group_repo.get_games(user_id, group_id)
+        games = self.__group_repo.get_games(user_id, group_id)
+        return self.categorize_games(games)
+
+    def categorize_games(self, games):
+        now = datetime.now(timezone.utc)
+
+        active = []
+        upcoming = []
+        finished = []
+
+        for game in games:
+            start_at = datetime.fromisoformat(game["start_at"].replace("Z", "+00:00"))
+            end_at = datetime.fromisoformat(game["end_at"].replace("Z", "+00:00"))
+
+            if start_at > now:
+                upcoming.append(game)
+            elif end_at < now:
+                finished.append(game)
+            else:
+                active.append(game)
+
+        return {
+            "active": active,
+            "upcoming": upcoming,
+            "finished": finished
+        }

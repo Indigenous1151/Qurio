@@ -159,12 +159,12 @@ class GroupController:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
             data = request.get_json()
-            print("DEBUG: pulled data from request")
+            # print("DEBUG: pulled data from request")
             # parse information from request
             group_id = data["group_id"]
-            print(f"DEBUG: group_id: {group_id}")
+            # print(f"DEBUG: group_id: {group_id}")
             created_by = user_id # make it clear that the user is "created_by"
-            print(f"DEBUG: created_by: {user_id}")
+            # print(f"DEBUG: created_by: {user_id}")
             # Parse ISO 8601 string and ensure UTC timezone for PostgreSQL timestamptz
             start_at_str = data["start_at"]
             # Handle both Z and +00:00 formats
@@ -175,24 +175,14 @@ class GroupController:
                 start_at = start_at.replace(tzinfo=timezone.utc)
             else:
                 start_at = start_at.astimezone(timezone.utc)
-            print(f"start_at: {start_at}")
+            # print(f"start_at: {start_at}")
             duration_hours = int(data["duration_hours"])
-            print(f"duration_hours: {duration_hours}")
+            # print(f"duration_hours: {duration_hours}")
             end_at = start_at + timedelta(hours=duration_hours)
-            print(f"end_at: {end_at}")
+            # print(f"end_at: {end_at}")
             num_questions = data["question_count"]
             category = data.get("category", None)
             difficulty = data.get("difficulty", None)
-
-            # determine the status of the game
-            now = datetime.now(timezone.utc)
-
-            if now < start_at:
-                status = "upcoming"
-            elif start_at <= now <= end_at:
-                status = "active"
-            else:
-                status = "finished"
 
             # store the parsed info in a dictionary
             game_data = {
@@ -201,7 +191,6 @@ class GroupController:
                 "start_at": start_at,
                 "duration_hours": duration_hours,
                 "end_at": end_at,
-                "status": status,
                 "game_params": {
                     "question_count": num_questions,
                     "type": "multiple", # just support multiple choice for now

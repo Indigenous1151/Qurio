@@ -300,7 +300,6 @@ class GroupRepository:
                 "start_at": start_at,
                 "duration_hours": game_data.get("duration_hours"),
                 "end_at": end_at,
-                "status": game_data.get("status", "invalid"),
                 "game_params": game_data.get("game_params", {}),
                 "questions": question_data,
             }
@@ -339,18 +338,14 @@ class GroupRepository:
                 raise Exception("User is not part of the group")
 
             # Fetch games for all three statuses
-            games_data = {}
-            for status in ["active", "upcoming", "finished"]:
-                result = (
-                    client.table("group_games")
-                    .select("*")
-                    .eq("group_id", group_id)
-                    .eq("status", status)
-                    .execute()
-                )
-                games_data[status] = result.data or []
+            result = (
+                client.table("group_games")
+                .select("*")
+                .eq("group_id", group_id)
+                .execute()
+            )
 
-            return games_data
+            return result.data or []
 
         except Exception as e:
             print(f"Error getting games: {e}")
