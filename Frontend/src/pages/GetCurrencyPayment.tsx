@@ -47,16 +47,59 @@ export function GetCurrencyPayment() {
     fetchPaymentTypes();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
+  
     if (!selectedMethod || !cardNumber || !cardName || !expiry || !cvv) {
-      return setError("Please fill in all fields.");
+      setError("Please fill in all fields.");
+      return;
     }
-
-    // simulate success
-    setShowSuccessModal(true);
+  
+    if (!packageData) {
+      setError("No package selected.");
+      return;
+    }
+  
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+  
+      if (sessionError || !session?.access_token) {
+        setError("You must be signed in.");
+        return;
+      }
+  
+      const response = await fetch("http://127.0.0.1:5001/payment/purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          amount: packageData.price,
+          currency: packageData.coins,
+          payment_type: selectedMethod,
+          card_number: cardNumber,
+          expiry: expiry,
+          cvv: cvv,
+        }),
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        setError(result.error || "Payment failed.");
+        return;
+      }
+  
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error("Payment error:", err);
+      setError("Something went wrong while processing payment.");
+    }
   };
 
   return (
@@ -65,8 +108,6 @@ export function GetCurrencyPayment() {
 
       <div className="max-w-2xl mx-auto px-4 pt-20 pb-20">
         <h1 className="text-3xl font-bold mb-6">Payment Required</h1>
-
-        {error && <div className="error-box">{error}</div>}
 
         <form onSubmit={handleSubmit} className="payment-form">
 
@@ -77,6 +118,8 @@ export function GetCurrencyPayment() {
               <p><strong>Total: ${packageData.price.toFixed(2)}</strong></p>
             </div>
           )}
+
+          {error && <div className="error-box">{error}</div>}
 
           <select
             value={selectedMethod}
@@ -135,7 +178,7 @@ export function GetCurrencyPayment() {
         <div className="modal-overlay">
           <div className="modal-box">
             <h2>Payment Successful!</h2>
-            <p>Your coins will be added to your account shortly!</p>
+            <p>Your coins have been added to your account!</p>
 
             <button
               className="modal-button"
