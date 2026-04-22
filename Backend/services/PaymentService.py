@@ -63,7 +63,7 @@ class PaymentService:
         self,
         user_id: str,
         amount: float,
-        currency: int,
+        currency_purchased: int,
         payment_type: str,
         card_number: str,
         expiry: str,
@@ -72,7 +72,7 @@ class PaymentService:
         if amount <= 0:
             raise Exception("Amount must be greater than 0")
 
-        if currency <= 0:
+        if currency_purchased <= 0:
             raise Exception("Currency amount must be greater than 0")
 
         if not self.__repo.is_payment_type_active(payment_type):
@@ -83,14 +83,14 @@ class PaymentService:
         payment = Payment(
             user_id=user_id,
             amount=amount,
-            currency_purchased=currency,
+            currency_purchased=currency_purchased,
             payment_type=payment_type
         )
 
         if not self.__repo.save_payment(payment):
             raise Exception("Failed to save payment")
 
-        if not self.__user_repo.add_currency(user_id, currency):
+        if not self.__user_repo.add_currency(user_id, currency_purchased):
             raise Exception("Failed to update user currency")
 
         return payment
