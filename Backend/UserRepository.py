@@ -202,3 +202,44 @@ class UserRepository:
             print(f"Error searching by email: {e}")
             return []
 
+    def get_user_currency(self, user_id: str) -> int:
+        try:
+            client = self.__db_client.get_client()
+            result = (
+                client.table("public_profile")
+                .select("currency")
+                .eq("user_id", user_id)
+                .single()
+                .execute()
+            )
+
+            if not result.data:
+                raise Exception("User not found")
+
+            return result.data.get("currency", 0)
+        except Exception as e:
+            print(f"Error getting currency: {e}")
+            return 0
+
+
+    def update_user_currency(self, user_id: str, currency: int) -> bool:
+        try:
+            client = self.__db_client.get_client()
+            client.table("public_profile").update({
+                "currency": currency
+            }).eq("user_id", user_id).execute()
+            return True
+        except Exception as e:
+            print(f"Error updating currency: {e}")
+            return False
+
+
+    def add_currency(self, user_id: str, amount: int) -> bool:
+        try:
+            current_currency = self.get_user_currency(user_id)
+            new_total = current_currency + amount
+            return self.update_user_currency(user_id, new_total)
+        except Exception as e:
+            print(f"Error adding currency: {e}")
+            return False
+        
