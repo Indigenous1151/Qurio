@@ -10,7 +10,6 @@ class Payment:
         self.currency_purchased = currency_purchased
         self.payment_type = payment_type
         self.status = status.value
-        self.payment_code = str(uuid.uuid4())[:8].upper()
 
     def get_payment_id(self) -> str:
         return self.payment_id
