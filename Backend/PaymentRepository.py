@@ -75,3 +75,44 @@ class PaymentRepository:
         except Exception as e:
             print(f"Error getting active configs: {e}")
             return []
+        
+    def is_payment_type_active(self, payment_type: str) -> bool:
+        try:
+            client = self.__db_client.get_client()
+            result = (
+                client.table("payment_config")
+                .select("*")
+                .eq("payment_type", payment_type)
+                .eq("is_active", True)
+                .execute()
+            )
+            return len(result.data) > 0
+        except Exception as e:
+            print(f"Error checking payment type: {e}")
+            return False
+
+
+    def save_payment(self, payment) -> bool:
+        try:
+            client = self.__db_client.get_client()
+            client.table("payment").insert(payment.to_dict()).execute()
+            return True
+        except Exception as e:
+            print(f"Error saving payment: {e}")
+            return False
+
+
+    def get_payment_history(self, user_id: str) -> list:
+        try:
+            client = self.__db_client.get_client()
+            result = (
+                client.table("payment")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("created_at", desc=True)
+                .execute()
+            )
+            return result.data
+        except Exception as e:
+            print(f"Error getting payment history: {e}")
+            return []
