@@ -116,3 +116,51 @@ class PaymentRepository:
         except Exception as e:
             print(f"Error getting payment history: {e}")
             return []
+        
+    def get_payment_logs(self) -> list:
+        try:
+            client = self.__db_client.get_client()
+            result = (
+                client.table("payment")
+                .select("*")
+                .order("created_at", desc=True)
+                .execute()
+            )
+            return result.data or []
+        except Exception as e:
+            print(f"Error getting payment logs: {e}")
+            return []
+        
+    def get_user_email(self, user_id: str) -> str:
+        try:
+            client = self.__db_client.get_client()
+            user_response = client.auth.admin.get_user_by_id(user_id)
+            return user_response.user.email if user_response and user_response.user else ""
+        except Exception as e:
+            print(f"Error getting user email: {e}")
+            return ""
+        
+    def get_all_payment_logs_detailed(self) -> list:
+        try:
+            payments = self.get_payment_logs()
+            detailed_logs = []
+
+            for payment in payments:
+                email = self.get_user_email(payment["user_id"])
+
+                detailed_logs.append({
+                    "payment_id": payment.get("payment_id"),
+                    "created_at": payment.get("created_at"),
+                    "user_id": payment.get("user_id"),
+                    "email": email,
+                    "amount": payment.get("amount"),
+                    "currency_purchased": payment.get("currency_purchased"),
+                    "payment_type": payment.get("payment_type"),
+                    "status": payment.get("status"),
+                    "payment_code": payment.get("payment_code"),
+                })
+
+            return detailed_logs
+        except Exception as e:
+            print(f"Error building detailed payment logs: {e}")
+            return []
