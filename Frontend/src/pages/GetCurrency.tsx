@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from '../components/navbar';
 import { Footer } from '../components/Footer';
 import '../details/GetCurrency.css';
@@ -9,7 +9,30 @@ import { useNavigate } from "react-router-dom";
 export function GetCurrency(){
 
     const navigate = useNavigate();
+    const [currency, setCurrency] = useState<number>(0);
 
+    useEffect(() => {
+      const fetchCurrency = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+    
+        if (!user) return;
+    
+        const { data: profile, error } = await supabase
+          .from("public_profile")
+          .select("currency")
+          .eq("user_id", user.id)
+          .maybeSingle();
+    
+        if (error) {
+          console.error("Error fetching currency:", error);
+          return;
+        }
+    
+        setCurrency(profile?.currency ?? 0);
+      };
+    
+      fetchCurrency();
+    }, []);
 
     function paymentPage(packageData: { coins: number; price: number }) {
         navigate("/get-currency-payment", {
@@ -31,6 +54,21 @@ export function GetCurrency(){
             Purchase in Game Currency! <br />
           </h1>
         </div>
+
+        <div className="flex justify-center mb-6 sm:mb-8 -mt-6">
+          <div className="inline-flex items-center gap-3 bg-[#eef4f0] border border-[#d8e2db] rounded-lg px-5 py-3 shadow-sm">
+            <span className="text-2xl">💰</span>
+            <div className="text-left">
+              <div className="text-[11px] uppercase tracking-widest text-[#888]">
+                Currency
+              </div>
+              <div className="text-[#638F77] font-extrabold text-lg sm:text-xl">
+                {currency}
+              </div>
+            </div>
+          </div>
+        </div>
+          
       <div className = "enter-info-box">
                 Purchase in game currency to use for buying hints and other items in the game!
 
