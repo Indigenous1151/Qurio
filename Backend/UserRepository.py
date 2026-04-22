@@ -47,7 +47,8 @@ class UserRepository:
             client.table("public_profile").upsert({
                 "user_id": public_info.get_user_id(),
                 "username": public_info.get_username(),
-                "bio": public_info.get_bio()
+                "bio": public_info.get_bio(),
+                "currency": public_info.get_currency()
             }, on_conflict="user_id").execute()
             return True
         except Exception as e:
@@ -99,7 +100,8 @@ class UserRepository:
         result = client.table("public_profile").insert({
             "user_id": user_id,
             "username": username,
-            "bio": ""
+            "bio": "",
+            "currency": 0
         }).execute()
 
         if not result:
