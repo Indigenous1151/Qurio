@@ -10,7 +10,6 @@ class PaymentController:
         self.__service: PaymentService = service
         self.__register_routes()
         self.get_user_id = get_user_id_func
-        
 
     def __register_routes(self):
         payment_bp.add_url_rule('/admin/is-admin', 'is_admin', self.is_admin, methods=['GET'])
@@ -23,9 +22,8 @@ class PaymentController:
         payment_bp.add_url_rule('/admin/logs', 'get_admin_payment_logs', self.get_admin_payment_logs, methods=['GET'])
 
     def is_admin(self):
-        
         try:
-            print("Headers:",request.headers)
+            # print("Headers:",request.headers)
             user_id = self.get_user_id(request)
             print(user_id)
             if not user_id:
@@ -35,7 +33,6 @@ class PaymentController:
         except Exception as e:
             print(e)
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
-            
 
     def configure_payment_method(self):
         try:
@@ -47,8 +44,6 @@ class PaymentController:
             self.__service.configure_payment_method(user_id, data['payment_type'])
 
             return jsonify({"message": "Payment method configured"}), HttpStatus.CREATED
-
-        
 
         except Exception as e:
             if "already configured" in str(e):
@@ -74,7 +69,7 @@ class PaymentController:
             return jsonify({"message": "Config deleted"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
-        
+
     def purchase_currency(self):
         try:
             user_id = self.get_user_id(request)
@@ -101,14 +96,12 @@ class PaymentController:
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.BAD_REQUEST
 
-
     def get_available_payment_types(self):
         try:
             payment_types = self.__service.get_available_payment_configs()
             return jsonify({"payment_types": payment_types}), HttpStatus.OK
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
-
 
     def get_payment_history(self):
         try:
@@ -120,7 +113,7 @@ class PaymentController:
             return jsonify({"payments": history}), HttpStatus.OK
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
-        
+
     def get_admin_payment_logs(self):
         try:
             user_id = self.get_user_id(request)
@@ -134,4 +127,3 @@ class PaymentController:
             if "Unauthorized" in str(e):
                 return jsonify({"error": str(e)}), HttpStatus.UNAUTHORIZED
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
-    
