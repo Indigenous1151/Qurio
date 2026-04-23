@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../details/Groups.css";
 import { supabase } from '../supabaseClient/supabaseClient';
 import type { Game } from "../types/Game";
+import { getCategoryLabel, getDifficultyLabel } from "../utils/gameFormat";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -30,7 +32,7 @@ type GameCardProps = {
   type: "active" | "upcoming";
 };
 
-const GameCard = ({ game, type }: GameCardProps) => {
+const GameCard = React.memo(({ game, type }: GameCardProps) => {
   return (
     <div className="game-item">
       <div className="game-info">
@@ -38,17 +40,13 @@ const GameCard = ({ game, type }: GameCardProps) => {
           Questions: {game.game_params?.question_count ?? "N/A"}
         </p>
 
-        {game.game_params?.category && (
-          <p className="game-detail">
-            Category: {game.game_params.category}
-          </p>
-        )}
+        <p className="game-detail">
+          Category: {getCategoryLabel(game.game_params?.category)}
+        </p>
 
-        {game.game_params?.difficulty && (
-          <p className="game-detail">
-            Difficulty: {game.game_params.difficulty}
-          </p>
-        )}
+        <p className="game-detail">
+          Difficulty: {getDifficultyLabel(game.game_params?.difficulty)}
+        </p>
 
         {type === "active" && (
           <p className="game-detail">
@@ -69,7 +67,7 @@ const GameCard = ({ game, type }: GameCardProps) => {
       </div>
     </div>
   );
-};
+});
 
 export function GroupDetails() {
   const { groupId } = useParams();

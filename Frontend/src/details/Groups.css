@@ -207,6 +207,31 @@
     border: 1px solid #fecaca;
   }
 
+  /* Games List Styles */
+  .games-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .game-item {
+    margin: 0px 5px;
+    border: rgba(0,0,0,0.2) 1px solid;
+    border-radius: 12px;
+    padding: 0.5rem;
+  }
+
+  .game-info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .games-subsection {
+    margin-top: 0.5rem;
+  }
+
   /* Modal Styles */
   .modal-overlay {
     position: fixed;
@@ -333,7 +358,24 @@
       flex-direction: column;
       align-items: flex-start;
     }
-  
+
+    .games-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .game-item {
+      margin: 0px 5px;
+      border: rgba(0,0,0,0.2) 1px solid;
+      border-radius: 12px;
+      padding: 0.5rem;
+    }
+
+    .games-subsection {
+      margin-top: 0.5rem;
+    }
+
     .card-header-row {
       flex-direction: column;
       align-items: flex-start;
