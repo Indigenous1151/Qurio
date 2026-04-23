@@ -103,6 +103,27 @@ export function GroupDetails() {
     };
   };
 
+  const fetchGames = async () => {
+    if (!groupId) return;
+
+    try {
+      const headers = await getAuthHeader();
+      const res = await fetch(`${API_URL}/group/games?group_id=${groupId}`, {
+        headers
+      });
+
+      const data = await res.json();
+
+      setGames({
+        active: data.active,
+        upcoming: data.upcoming,
+        finished: data.finished
+      });
+    } catch (err) {
+      console.error("Error fetching games:", err);
+    }
+  };
+
   useEffect(() => {
     if (!groupId) return;
     async function fetchGroup() {
@@ -127,27 +148,6 @@ export function GroupDetails() {
 
   // get active and upcoming games, then determine the number of each
   useEffect(() => {
-    if (!groupId) return;
-    const fetchGames = async () => {
-      try {
-        const headers = await getAuthHeader();
-        const res = await fetch(`${API_URL}/group/games?group_id=${groupId}`, {
-          headers
-        });
-        console.log("Fetch games response: ", res);
-        console.log("Fetch games content type: ", res.headers.get("Content-Type"));
-        const data = await res.json()
-
-        setGames({
-          active: data.active,
-          upcoming: data.upcoming,
-          finished: data.finished
-        });
-      } catch (err) {
-        console.error("Error fetching games: ", err);
-      }
-    };
-
     fetchGames();
   }, [groupId]);
 
@@ -254,15 +254,8 @@ export function GroupDetails() {
           category: "",
           difficulty: ""
         });
-        const gamesRes = await fetch(`${API_URL}/group/games?group_id=${groupId}`, {
-          headers
-        });
-        const gamesData = await gamesRes.json();
-        setGames({
-          active: gamesData.active,
-          upcoming: gamesData.upcoming,
-          finished: gamesData.finished
-        });
+
+        await fetchGames();
       } else {
         setError(data.error || "Failed to create game.");
       }
