@@ -1,3 +1,4 @@
+import uuid
 from database.SupabaseClient import SupabaseClient
 from models.Group import Group
 from typing import Any, cast
@@ -40,7 +41,7 @@ class GroupRepository:
             return {}
         except Exception as e:
             print(f"Error getting group: {e}")
-            return {}
+            raise
 
     def get_user_groups(self, user_id: str) -> list[dict[str, Any]]:
         try:
@@ -54,7 +55,7 @@ class GroupRepository:
             return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting user groups: {e}")
-            return []
+            raise
 
     def get_group_by_invite_code(self, invite_code: str) -> list[dict[str, Any]]:
         try:
@@ -72,7 +73,7 @@ class GroupRepository:
             return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting group invite: {e}")
-            return []
+            raise
 
     def get_group_invites(self, user_id: str) -> list[dict[str, Any]]:
         try:
@@ -100,7 +101,7 @@ class GroupRepository:
             return cast(list[dict[str, Any]], result.data)
         except Exception as e:
             print(f"Error getting group invites: {e}")
-            return []
+            raise
 
     def add_user_to_group(self, group_id: str, user_id: str):
         try:
@@ -136,7 +137,7 @@ class GroupRepository:
 
         except Exception as e:
             print(f"Error adding user to group: {e}")
-            return None
+            raise
 
     def mark_invite_used(self, invite_code: str):
         try:
@@ -157,7 +158,7 @@ class GroupRepository:
 
         except Exception as e:
             print(f"Error updating invite status: {e}")
-            return []
+            raise
 
     def remove_user_from_group(self, group_id: str, user_id: str):
         try:
@@ -192,7 +193,7 @@ class GroupRepository:
 
         except Exception as e:
             print(f"Error removing user from group: {e}")
-            return None
+            raise
 
     def save_invite(self, invite) -> bool:
         try:
@@ -238,7 +239,7 @@ class GroupRepository:
             return result.data
         except Exception as e:
             print(f"Error getting pending invites: {e}")
-            return []
+            raise
 
     def update_invite_status(self, invite_id: str, status: str) -> bool:
         try:
@@ -260,7 +261,7 @@ class GroupRepository:
             if not client:
                 raise Exception("Database client is None")
 
-            group = self.get_group(group_id)  
+            group = self.get_group(group_id)
             if not group:
                 raise Exception("Group not found")
             members = group["members"]
@@ -273,3 +274,79 @@ class GroupRepository:
         except Exception as e:
             print(f"Error adding member: {e}")
             return False
+
+    def create_game(self, game_data: dict[str, Any], question_data):
+        # store game data in supabase group_games table
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            game_id = str(uuid.uuid4())
+            # Convert datetime objects to ISO 8601 strings for Supabase timestamptz
+            start_at = game_data.get("start_at")
+            end_at = game_data.get("end_at")
+            
+            # If they're datetime objects, convert to ISO format string
+            if start_at and hasattr(start_at, 'isoformat'):
+                start_at = start_at.isoformat()
+            if end_at and hasattr(end_at, 'isoformat'):
+                end_at = end_at.isoformat()
+            
+            group_games_row_data = {
+                "game_id": game_id,
+                "group_id": game_data.get("group_id"),
+                "created_by": game_data.get("created_by"),
+                "start_at": start_at,
+                "duration_hours": game_data.get("duration_hours"),
+                "end_at": end_at,
+                "game_params": game_data.get("game_params", {}),
+                "questions": question_data,
+            }
+
+            result = client.table("group_games").insert(group_games_row_data).execute()
+            return result
+
+        except Exception as e:
+            print(f"Error creating group game: {e}")
+            raise
+
+    def get_games(self, user_id: str, group_id: str):
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            # Verify user is part of the group
+            result = (
+                client.table("groups")
+                .select("members")
+                .eq("group_id", group_id)
+                .single()
+                .execute()
+            )
+
+            if not isinstance(result.data, dict):
+                raise Exception("Invalid group data format")
+
+            group_members = result.data.get("members", [])
+
+            if not isinstance(group_members, list):
+                raise Exception("Invalid members format")
+
+            if user_id not in group_members:
+                raise Exception("User is not part of the group")
+
+            # Fetch games for all three statuses
+            result = (
+                client.table("group_games")
+                .select("*")
+                .eq("group_id", group_id)
+                .execute()
+            )
+
+            return result.data or []
+
+        except Exception as e:
+            print(f"Error getting games: {e}")
+            raise
