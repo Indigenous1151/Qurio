@@ -39,7 +39,7 @@ export const Navbar = () => {
             className="nav-item"
             onClick={() => toggleDropdown('profile')}
           >
-            Profile
+            Profile ▾
           </span>
 
           <ul className={`dropdown-menu ${dropdown === 'profile' ? 'show' : ''}`}>
@@ -55,7 +55,7 @@ export const Navbar = () => {
             className="nav-item"
             onClick={() => toggleDropdown('social')}
           >
-            Social
+            Social ▾
           </span>
 
           <ul className={`dropdown-menu ${dropdown === 'social' ? 'show' : ''}`}>
@@ -71,11 +71,11 @@ export const Navbar = () => {
             className="nav-item"
             onClick={() => toggleDropdown('admin')}
           >
-            Admin
+            Admin ▾
           </span>
 
           <ul className={`dropdown-menu ${dropdown === 'admin' ? 'show' : ''}`}>
-            <li><Link to="/admin"></Link></li>
+            <li><Link to="/admin/payment" onClick={handleNavClick}>Configure Payment</Link></li>
           </ul>
         </li>
 
