@@ -17,6 +17,10 @@ class PaymentController:
         payment_bp.add_url_rule('/admin/configure', 'configure', self.configure_payment_method, methods=['POST'])
         payment_bp.add_url_rule('/admin/configs', 'get_configs', self.get_payment_configs, methods=['GET'])
         payment_bp.add_url_rule('/admin/configs/<config_id>', 'delete_config', self.delete_payment_config, methods=['DELETE'])
+        payment_bp.add_url_rule('/purchase', 'purchase_currency', self.purchase_currency, methods=['POST'])
+        payment_bp.add_url_rule('/types', 'get_available_payment_types', self.get_available_payment_types, methods=['GET'])
+        payment_bp.add_url_rule('/history', 'get_payment_history', self.get_payment_history, methods=['GET'])
+        payment_bp.add_url_rule('/admin/logs', 'get_admin_payment_logs', self.get_admin_payment_logs, methods=['GET'])
 
     def is_admin(self):
         
@@ -70,3 +74,64 @@ class PaymentController:
             return jsonify({"message": "Config deleted"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+        
+    def purchase_currency(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            data = request.get_json()
+
+            payment = self.__service.purchase_currency(
+                user_id=user_id,
+                amount=data["amount"],
+                currency_purchased=data["currency_purchased"],
+                payment_type=data["payment_type"],
+                card_number=data["card_number"],
+                expiry=data["expiry"],
+                cvv=data["cvv"]
+            )
+
+            return jsonify({
+                "message": "Payment successful",
+                "payment": payment.to_dict()
+            }), HttpStatus.CREATED
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.BAD_REQUEST
+
+
+    def get_available_payment_types(self):
+        try:
+            payment_types = self.__service.get_available_payment_configs()
+            return jsonify({"payment_types": payment_types}), HttpStatus.OK
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+
+    def get_payment_history(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            history = self.__service.get_payment_history(user_id)
+            return jsonify({"payments": history}), HttpStatus.OK
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+        
+    def get_admin_payment_logs(self):
+        try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
+            logs = self.__service.get_payment_logs(user_id)
+            return jsonify({"payments": logs}), HttpStatus.OK
+
+        except Exception as e:
+            if "Unauthorized" in str(e):
+                return jsonify({"error": str(e)}), HttpStatus.UNAUTHORIZED
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+    

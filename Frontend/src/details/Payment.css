@@ -35,6 +35,16 @@
     width: 50%;
 }
 
+.error-box {
+  background-color: #fdeaea;
+  color: #b42318;
+  border: 2px solid #f5c2c7;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
 .total-box {
     background-color: #638F77;
     color: white;

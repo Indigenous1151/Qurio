@@ -96,7 +96,7 @@ game_service = GameService(
     game_repo=game_repo,
     trivia_service=trivia_service
 )
-payment_service = PaymentService(repo = payment_repo)
+payment_service = PaymentService(repo = payment_repo, user_repo=user_repo)
 bug_report_service = BugReportService(bug_report_repo = bug_report_repo)
 
 # Controller Creation
