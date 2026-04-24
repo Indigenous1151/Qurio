@@ -6,10 +6,11 @@ from utils.HttpStatus import HttpStatus
 payment_bp = Blueprint('payment', __name__, url_prefix='/payment')
 
 class PaymentController:
-    def __init__(self, service: PaymentService,get_user_id_func):
+    def __init__(self, service: PaymentService,get_user_id_func, notification_service=None):
         self.__service: PaymentService = service
-        self.__register_routes()
+        self.__notification_service = notification_service
         self.get_user_id = get_user_id_func
+        self.__register_routes()
 
     def __register_routes(self):
         payment_bp.add_url_rule('/admin/is-admin', 'is_admin', self.is_admin, methods=['GET'])
@@ -87,6 +88,12 @@ class PaymentController:
                 expiry=data["expiry"],
                 cvv=data["cvv"]
             )
+
+            if self.__notification_service:
+                self.__notification_service.create_notification(
+                    user_id,
+                    f"You successfully purchased {data['currency_purchased']} coins."
+                )
 
             return jsonify({
                 "message": "Payment successful",
