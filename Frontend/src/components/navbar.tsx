@@ -1,10 +1,36 @@
 import { Link } from 'react-router-dom';
 import '../details/Navbar.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient/supabaseClient';
 
 export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    async function checkAdmin() {
+      const { data: { session } } = await supabase.auth.getSession();
+  
+      if (!session?.access_token) {
+        setIsAdmin(false);
+        return;
+      }
+  
+      const res = await fetch(`${API_URL}/payment/admin/is-admin`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+      });
+  
+      const json = await res.json();
+      setIsAdmin(json.is_admin === true);
+    }
+  
+    checkAdmin();
+  }, []);
 
   const handleNavClick = () => {
     setOpen(false);
@@ -66,22 +92,26 @@ export const Navbar = () => {
         </li>
 
         {/* Admin */}
-        <li className="dropdown">
-          <span
-            className="nav-item"
-            onClick={() => toggleDropdown('admin')}
-          >
-            Admin ▾
-          </span>
+        {isAdmin && (
+          <li className="dropdown">
+            <span
+              className="nav-item"
+              onClick={() => toggleDropdown('admin')}
+            >
+              Admin ▾
+            </span>
 
-          <ul className={`dropdown-menu ${dropdown === 'admin' ? 'show' : ''}`}>
-            <li><Link to="/admin/payment" onClick={handleNavClick}>Configure Payment</Link></li>
-          </ul>
-        </li>
+            <ul className={`dropdown-menu ${dropdown === 'admin' ? 'show' : ''}`}>
+              <li><Link to="/admin/payment" onClick={handleNavClick}>Configure Payment</Link></li>
+            </ul>
+          </li>
+        )}
 
+        {/* Logout */}
         <li>
           <Link to="/logout" onClick={handleNavClick}>Logout</Link>
         </li>
+       
 
       </ul>
     </div>
