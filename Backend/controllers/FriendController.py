@@ -8,6 +8,7 @@ class FriendController:
     def __init__(self, service: FriendService, get_user_id_func, notification_service=None):
         self.__service = service
         self.__get_user_id_func = get_user_id_func
+        self.__notification_service = notification_service
         self.__register_routes()
 
     def __register_routes(self):
