@@ -53,12 +53,6 @@ export const Navbar = () => {
           <Link to="/" onClick={handleNavClick}>Home</Link>
         </li>
 
-        <li>
-          <Link to="/get-currency" onClick={handleNavClick}>
-            Purchase Currency
-          </Link>
-        </li>
-
         {/* Profile */}
         <li className="dropdown">
           <span
@@ -72,6 +66,7 @@ export const Navbar = () => {
             <li><Link to="/UpdatePersonalInformation" onClick={handleNavClick}>Personal Info</Link></li>
             <li><Link to="/UpdatePublicInformation" onClick={handleNavClick}>Public Info</Link></li>
             <li><Link to="/personal-statistics" onClick={handleNavClick}>Statistics</Link></li>
+            <li><Link to="/get-currency" onClick={handleNavClick}>Purchase Currency</Link></li>
           </ul>
         </li>
 
