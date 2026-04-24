@@ -18,45 +18,42 @@ export function UpdatePersonalInformation(){
   const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
 
-
-  const handleSubmit = async () => {
-    try {
-        // // temporary login for testing - remove later
-        // await supabase.auth.signInWithPassword({
-        //     email: 'newuser2@gmail.com',
-        //     password: 'abc'
-        // });
-
-        // const { data: { user } } = await supabase.auth.getUser();
-
+    const handleSubmit = async () => {
+      try {
+        setMessage("Updating...");
+    
         const { data: { user } } = await supabase.auth.getUser();
-        console.log("Current user ID:", user?.id); 
+        console.log("Current user ID:", user?.id);
+    
         if (!user) {
-            console.error("No user logged in");
-            return;
+          setMessage("No user logged in");
+          return;
         }
-
+    
         const headers = await getAuthHeader();
         const response = await fetch('http://localhost:5001/user/personal', {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({
-                full_name: full_name,
-                email: email
-            })
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            full_name: full_name,
+            email: email
+          })
         });
-
+    
         const data = await response.json();
-
+    
         if (response.ok) {
-            console.log("Updated successfully:", data);
+          setMessage("Updated successfully!");
+          console.log("Updated successfully:", data);
         } else {
-            console.error("Error:", data.error);
+          setMessage(`Error: ${data.error}`);
+          console.error("Error:", data.error);
         }
-    } catch (error) {
+      } catch (error) {
         console.error("Request failed:", error);
+        setMessage("Failed to update personal information");
+      }
     }
-}
 
   return(
   <div>
