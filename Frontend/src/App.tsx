@@ -2,6 +2,7 @@
 import './App.css'
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom' 
 import { Home } from './pages/Home'
+import { AdminDashboard } from './pages/AdminDashboard'
 import { UpdatePersonalInformation } from './pages/UpdatePersonalInformation'
 import { UpdatePublicInformation } from './pages/UpdatePublicInformation'
 import { ResultScreen } from './pages/ResultScreen'
@@ -42,6 +43,7 @@ function App() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Home/>} />
+          <Route path="/admin/dashboard" element={<AdminDashboard/>} />
           <Route path="/UpdatePersonalInformation" element={<UpdatePersonalInformation/>} />
           <Route path="/UpdatePublicInformation" element={<UpdatePublicInformation/>} />
           <Route path="/game/setup" element={<ClassicGame />} />

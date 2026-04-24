@@ -7,30 +7,12 @@ import { supabase } from '../supabaseClient/supabaseClient';
 
 const API_URL = import.meta.env.VITE_API_URL;
 export function Home() {
-const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [currency, setCurrency] = useState<number>(0);
-  // useEffect(() => {
-  //   async function checkAdmin() {
-  //     const { data } = await supabase.auth.getUser();
-  //     if (data?.user) {
-  //       setUserId(data.user.id);
-  //       const res = await fetch(`${API_URL}/payment/admin/is-admin`, {
-  //         headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': `Bearer ${session.access_token}`
-  //       },
-  //       });
-  //       const json = await res.json();
-  //       setIsAdmin(json.is_admin);
-  //     }
-  //   }
-  //   checkAdmin();
-  // }, []);
 
   useEffect(() => {
-  async function checkAdmin() {
+  async function fetchUserData() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return;
@@ -54,22 +36,9 @@ if (!profile) {
   setUsername(profile.username);
   setCurrency(profile.currency ?? 0);
 }
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.access_token) return;
-
-    const res = await fetch(`${API_URL}/payment/admin/is-admin`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`
-      },
-    });
-
-    const json = await res.json();
-    setIsAdmin(json.is_admin);
   }
 
-  checkAdmin();
+  fetchUserData();
 }, []);
   return (
     <div>
@@ -84,7 +53,7 @@ if (!profile) {
 
          
           <div className="inline-block bg-[#638F77] text-white text-xs font-bold tracking-widest uppercase px-4 py-1.5 rounded-full mb-6">
-           {isAdmin ? "Admin Dashboard" : "Daily Trivia · Classic Mode"}
+           Daily Trivia · Classic Mode
           </div>
 
          
@@ -93,33 +62,27 @@ if (!profile) {
             style={{ fontFamily: "'Georgia', serif", letterSpacing: '-0.02em' }}
           >
             Welcome back, <br />
-            <span className="text-[#638F77]">{isAdmin ? "Admin" : username}</span>
+            <span className="text-[#638F77]">{username}</span>
           </h1>
 
           <p className="text-[#555] text-base sm:text-lg max-w-md mx-auto mb-10 sm:mb-12">
-           {isAdmin
-              ? "Manage payment methods and platform settings."
-              : "Test your knowledge, challenge yourself daily, and climb the leaderboard."}
-        
+           Test your knowledge, challenge yourself daily, and climb the leaderboard.
           </p>
 
-          {!isAdmin && (
-            <div className="flex justify-center mb-6 sm:mb-8 -mt-6">
-              <div className="inline-flex items-center gap-3 bg-[#eef4f0] border border-[#d8e2db] rounded-lg px-5 py-3 shadow-sm">
-                <span className="text-2xl">💰</span>
-                <div className="text-left">
-                  <div className="text-[11px] uppercase tracking-widest text-[#888]">
-                    Currency
-                  </div>
-                  <div className="text-[#638F77] font-extrabold text-lg sm:text-xl">
-                    {currency}
-                  </div>
+          <div className="flex justify-center mb-6 sm:mb-8 -mt-6">
+            <div className="inline-flex items-center gap-3 bg-[#eef4f0] border border-[#d8e2db] rounded-lg px-5 py-3 shadow-sm">
+              <span className="text-2xl">💰</span>
+              <div className="text-left">
+                <div className="text-[11px] uppercase tracking-widest text-[#888]">
+                  Currency
+                </div>
+                <div className="text-[#638F77] font-extrabold text-lg sm:text-xl">
+                  {currency}
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-         {!isAdmin && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
 
             
@@ -154,18 +117,7 @@ if (!profile) {
             </div>
 
           </div>
-         )}
-          {isAdmin && (
-            <div className="mt-8">
-              <Link to="/admin/payment">
-                <button className="inline-flex items-center gap-2 bg-[#1a1a1a] text-white font-bold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-all cursor-pointer border-none">
-                  ⚙️ Configure Payment Methods
-                </button>
-              </Link>
-            </div>
-          )}
 
-            {!isAdmin && (
           <div className="flex justify-center gap-6 sm:gap-12 mt-12 sm:mt-16 mb-10 flex-wrap">
             <div className="text-center">
               <div className="text-2xl sm:text-3xl font-black text-[#638F77]">10</div>
@@ -181,7 +133,7 @@ if (!profile) {
               <div className="text-2xl sm:text-3xl font-black text-[#638F77]">3</div>
               <div className="text-xs text-[#888] uppercase tracking-widest mt-1">Difficulty Levels</div>
             </div>
-          </div>)}
+          </div>
 
         </div>
       </div>

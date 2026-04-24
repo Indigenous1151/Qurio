@@ -97,7 +97,7 @@ export const Navbar = () => {
             </span>
 
           <ul className={`dropdown-menu ${dropdown === 'admin' ? 'show' : ''}`}>
-            <li><Link to="/admin/payment" onClick={handleNavClick}>Configure Payment</Link></li>
+            <li><Link to="/admin/dashboard" onClick={handleNavClick}>Admin Dashboard</Link></li>
             <li><Link to="/admin/payment-logs" onClick={handleNavClick}>Payment Logs</Link></li>
           </ul>
         </li>
