@@ -29,7 +29,6 @@ from controllers.GroupController import GroupController,group_bp
 from controllers.FriendController import FriendController, friend_bp
 from controllers.StatisticsController import StatisticsController, statistics_bp
 from controllers.PaymentController import PaymentController, payment_bp
-from controllers.StatisticsController import statistics_bp
 from controllers.BugReportController import BugReportController, bug_report_bp
 from controllers.NotificationController import NotificationController, notification_bp
 from services.FriendService import FriendService
@@ -108,11 +107,12 @@ app.config["NOTIFICATION_SERVICE"] = notification_service
 UserController(service=user_service, get_user_id_func=get_user_id_from_request)
 AuthController(service=auth_service, get_user_id_func=get_user_id_from_request)
 GameController(game_service=game_service, get_user_id_func=get_user_id_from_request)
-PaymentController(service=payment_service,get_user_id_func=get_user_id_from_request)
+PaymentController(service=payment_service,get_user_id_func=get_user_id_from_request, notification_service=notification_service)
 FriendController(service=friend_service, get_user_id_func=get_user_id_from_request)
 GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
 StatisticsController(get_user_id_func=get_user_id_from_request)
 BugReportController(service=bug_report_service, get_user_id_func=get_user_id_from_request)
+NotificationController(service=notification_service, get_user_id_func=get_user_id_from_request)
 
 app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)
