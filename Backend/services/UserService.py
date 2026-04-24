@@ -34,3 +34,6 @@ class UserService:
     
     def get_user_currency(self, user_id: str) -> int:
         return self.__repo.get_user_currency(user_id)
+
+    def get_public_profile(self, user_id: str) -> dict:
+        return self.__repo.get_public_profile(user_id)
