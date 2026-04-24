@@ -14,12 +14,14 @@ from services.TriviaService import TriviaService
 from GameRepository import GameRepository
 from GroupRepository import GroupRepository
 from QuestionRepository import QuestionRepository
+from NotificationRepository import NotificationRepository
 from services.UserService import UserService
 from services.GroupService import GroupService
 from services.AuthService import AuthService
 from services.GameService import GameService
 from services.PaymentService import PaymentService
 from services.BugReportService import BugReportService
+from services.NotificationService import NotificationService
 from controllers.UserController import UserController, user_bp
 from controllers.AuthController import AuthController, auth_bp
 from controllers.GameController import GameController, game_bp
@@ -29,6 +31,7 @@ from controllers.StatisticsController import StatisticsController, statistics_bp
 from controllers.PaymentController import PaymentController, payment_bp
 from controllers.StatisticsController import statistics_bp
 from controllers.BugReportController import BugReportController, bug_report_bp
+from controllers.NotificationController import NotificationController, notification_bp
 from services.FriendService import FriendService
 from FriendRepository import FriendRepository
 from PaymentRepository import PaymentRepository
@@ -83,7 +86,7 @@ friend_repo = FriendRepository(db_client=supabase)
 group_repo = GroupRepository(db_client=supabase)
 payment_repo = PaymentRepository(db_client=supabase)
 bug_report_repo = BugReportRepository(db_client=supabase)
-
+notification_repo = NotificationRepository(db_client=supabase)
 
 # Service Creation
 user_service = UserService(repo=user_repo)
@@ -98,6 +101,8 @@ game_service = GameService(
 )
 payment_service = PaymentService(repo = payment_repo, user_repo=user_repo)
 bug_report_service = BugReportService(bug_report_repo = bug_report_repo)
+notification_service = NotificationService(notification_repo)
+app.config["NOTIFICATION_SERVICE"] = notification_service
 
 # Controller Creation
 UserController(service=user_service, get_user_id_func=get_user_id_from_request)
@@ -117,6 +122,7 @@ app.register_blueprint(group_bp)
 app.register_blueprint(statistics_bp)
 app.register_blueprint(payment_bp)
 app.register_blueprint(bug_report_bp)
+app.register_blueprint(notification_bp)
 
 if __name__ == '__main__':
     print(app.url_map)
