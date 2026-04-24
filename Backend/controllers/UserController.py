@@ -41,22 +41,36 @@ class UserController:
 
     def update_public_profile(self):
         data: dict = request.get_json()
+        print(data)
+
         try:
             user_id = self.get_user_id(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
+            current_profile = self.__service.get_public_profile(user_id)
+
+            current_username = current_profile.get("username", "")
+            current_bio = current_profile.get("bio", "")
+            current_currency = current_profile.get("currency", 0)
+
+            new_username = data.get("username")
+            new_bio = data.get("bio")
+
+            # only update changed fields, persist previous info if user leaves blank
             updated = self.__service.update_public_profile(
                 user_id=user_id,
-                username=data['username'],
-                bio=data.get('bio', '')
+                username=new_username if new_username not in [None, ""] else current_username,
+                bio=new_bio if new_bio not in [None, ""] else current_bio,
+                currency=current_currency
             )
+
             return jsonify({
                 "message": "Public profile updated successfully",
                 "username": updated.get_username(),
-                "bio": updated.get_bio()
+                "bio": updated.get_bio(),
+                "currency": updated.get_currency()
             }), HttpStatus.OK
-        except KeyError as e:
-            return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
+
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
