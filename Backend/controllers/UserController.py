@@ -41,20 +41,25 @@ class UserController:
 
     def update_public_profile(self):
         data: dict = request.get_json()
+        print(data)
         try:
             user_id = self.get_user_id(request)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
+            current_currency = self.__service.get_user_currency(user_id)
+
             updated = self.__service.update_public_profile(
                 user_id=user_id,
                 username=data['username'],
-                bio=data.get('bio', '')
+                bio=data.get('bio', ''),
+                currency=current_currency
             )
             return jsonify({
                 "message": "Public profile updated successfully",
                 "username": updated.get_username(),
-                "bio": updated.get_bio()
+                "bio": updated.get_bio(),
+                "currency": updated.get_currency()
             }), HttpStatus.OK
         except KeyError as e:
             return jsonify({"error": f"Missing field: {str(e)}"}), HttpStatus.BAD_REQUEST
