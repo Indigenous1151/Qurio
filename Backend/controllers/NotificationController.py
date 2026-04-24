@@ -1,50 +1,72 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 from flask_cors import cross_origin
+from services.NotificationService import NotificationService
+from utils.HttpStatus import HttpStatus
+
 
 notification_bp = Blueprint("notifications", __name__, url_prefix="/notifications")
 
-@notification_bp.route("/me", methods=["GET", "OPTIONS"])
-@cross_origin(
-    origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_headers=["X-User-Id", "Content-Type"],
-    methods=["GET", "OPTIONS"]
-)
-def get_notifications():
-    try:
-        user_id = request.headers.get("X-User-Id")
 
-        if not user_id:
-            return jsonify({"error": "Missing user ID"}), 401
+class NotificationController:
+    def __init__(self, service: NotificationService, get_user_id_func):
+        self.__service: NotificationService = service
+        self.get_user_id = get_user_id_func
+        self.__register_routes()
 
-        notification_service = current_app.config["NOTIFICATION_SERVICE"]
+    def __register_routes(self):
+        notification_bp.add_url_rule(
+            "/me",
+            "get_notifications",
+            self.get_notifications,
+            methods=["GET", "OPTIONS"]
+        )
 
-        notifications = notification_service.get_notifications(user_id)
+        notification_bp.add_url_rule(
+            "/<notification_id>",
+            "delete_notification",
+            self.delete_notification,
+            methods=["DELETE", "OPTIONS"]
+        )
 
-        return jsonify(notifications), 200
+    @cross_origin(
+        origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_headers=["Authorization", "Content-Type"],
+        methods=["GET", "OPTIONS"]
+    )
+    def get_notifications(self):
+        try:
+            user_id = self.get_user_id(request)
 
-    except Exception as e:
-        print("Error in get_notifications:", e)
-        return jsonify({"error": str(e)}), 500
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
+            notifications = self.__service.get_notifications(user_id)
 
-@notification_bp.route("/<notification_id>", methods=["DELETE", "OPTIONS"])
-@cross_origin(
-    origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_headers=["Content-Type"],
-    methods=["DELETE", "OPTIONS"]
-)
-def delete_notification(notification_id):
-    try:
-        notification_service = current_app.config["NOTIFICATION_SERVICE"]
+            return jsonify(notifications), HttpStatus.OK
 
-        success = notification_service.delete_notification(notification_id)
+        except Exception as e:
+            print("Error in get_notifications:", e)
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
-        if not success:
-            return jsonify({"error": "Failed to delete notification"}), 400
+    @cross_origin(
+        origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_headers=["Authorization", "Content-Type"],
+        methods=["DELETE", "OPTIONS"]
+    )
+    def delete_notification(self, notification_id):
+        try:
+            user_id = self.get_user_id(request)
 
-        return jsonify({"message": "Notification deleted successfully"}), 200
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
-    except Exception as e:
-        print("Error in delete_notification:", e)
-        return jsonify({"error": str(e)}), 500
-    
+            success = self.__service.delete_notification(notification_id)
+
+            if not success:
+                return jsonify({"error": "Failed to delete notification"}), HttpStatus.BAD_REQUEST
+
+            return jsonify({"message": "Notification deleted successfully"}), HttpStatus.OK
+
+        except Exception as e:
+            print("Error in delete_notification:", e)
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
