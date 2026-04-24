@@ -7,10 +7,11 @@ from services.TriviaService import TriviaService
 from typing import Any
 
 class GroupService:
-    def __init__(self, group_repo: GroupRepository, user_repo, trivia_service: TriviaService):
+    def __init__(self, group_repo: GroupRepository, user_repo, trivia_service: TriviaService, notification_service=None):
         self.__group_repo = group_repo
         self.__user_repo = user_repo
         self.__trivia_service = trivia_service
+        self.__notification_service = notification_service
 
     def create_group(self, user_id: str, group_name: str, description: str = "") -> Group:
         group = Group(group_name=group_name, owner_id=user_id, description=description)
@@ -66,7 +67,19 @@ class GroupService:
             invited_by=invited_by,
             invited_user=receiver_id
         )
-        return self.__group_repo.save_invite(invite)
+
+        success = self.__group_repo.save_invite(invite)
+
+        if success and self.__notification_service:
+            notification_created = self.__notification_service.create_notification(
+                receiver_id,
+                "You received a new group invite."
+            )
+
+            if not notification_created:
+                print("Group invite was sent, but notification was not created.")
+
+        return success
 
     def get_pending_invites(self, user_id: str) -> list:
         return self.__group_repo.get_pending_invites(user_id)

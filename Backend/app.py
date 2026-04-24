@@ -92,7 +92,9 @@ user_service = UserService(repo=user_repo)
 friend_service = FriendService(friend_repo=friend_repo,user_repo=user_repo)
 auth_service = AuthService(repo=user_repo)
 trivia_service = TriviaService()
-group_service = GroupService(group_repo = group_repo,user_repo=user_repo,trivia_service=trivia_service)
+notification_service = NotificationService(notification_repo)
+app.config["NOTIFICATION_SERVICE"] = notification_service
+group_service = GroupService(group_repo = group_repo,user_repo=user_repo,trivia_service=trivia_service, notification_service=notification_service)
 game_service = GameService(
     question_repo=question_repo,
     game_repo=game_repo,
@@ -100,8 +102,7 @@ game_service = GameService(
 )
 payment_service = PaymentService(repo = payment_repo, user_repo=user_repo)
 bug_report_service = BugReportService(bug_report_repo = bug_report_repo)
-notification_service = NotificationService(notification_repo)
-app.config["NOTIFICATION_SERVICE"] = notification_service
+
 
 # Controller Creation
 UserController(service=user_service, get_user_id_func=get_user_id_from_request)
