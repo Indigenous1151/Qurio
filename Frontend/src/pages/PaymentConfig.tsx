@@ -26,7 +26,7 @@ export function AdminPayment() {
   const getToken = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token;
-};
+  };
 
   useEffect(() => {
   const init = async () => {
