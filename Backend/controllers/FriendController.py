@@ -5,7 +5,7 @@ from utils.HttpStatus import HttpStatus
 friend_bp = Blueprint('friend', __name__, url_prefix='/friend')
 
 class FriendController:
-    def __init__(self, service: FriendService, get_user_id_func):
+    def __init__(self, service: FriendService, get_user_id_func, notification_service=None):
         self.__service = service
         self.__get_user_id_func = get_user_id_func
         self.__register_routes()
@@ -26,6 +26,15 @@ class FriendController:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
             data = request.get_json()
             success = self.__service.send_friend_request(user_id, data['receiver_id'])
+
+            if success and self.__notification_service:
+                notification_created = self.__notification_service.create_notification(
+                    data['receiver_id'],
+                    "You received a new friend request."
+                )
+            if not notification_created:
+                print("Friend request sent, but notification was not created.")
+
             return jsonify({"message": "Friend request sent"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
