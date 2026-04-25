@@ -23,6 +23,8 @@ export function AdminPaymentLogs() {
   const [logs, setLogs] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // you can tweak this
 
   const getAuthHeader = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -62,8 +64,20 @@ export function AdminPaymentLogs() {
     fetchLogs();
   }, []);
 
+  // Needed when filtering/searching logs, but also ensures we reset to page 1 when logs change
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page when logs change
+  }, [logs]);
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  const currentLogs = logs.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(logs.length / itemsPerPage);
 
   return (
     <div>
@@ -85,7 +99,7 @@ export function AdminPaymentLogs() {
             </tr>
           </thead>
           <tbody>
-            {logs.map((log) => (
+            {currentLogs.map((log) => (
               <tr key={log.payment_id}>
                 <td>{log.payment_id}</td>
                 <td>{log.payment_code}</td>
@@ -100,6 +114,27 @@ export function AdminPaymentLogs() {
             ))}
           </tbody>
         </table>
+        <div className="flex justify-center items-center gap-4 mt-6">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
       <Footer />
     </div>
