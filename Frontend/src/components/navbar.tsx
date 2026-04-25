@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import '../details/Navbar.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabaseClient/supabaseClient';
 
 export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const navRef = useRef(null);
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -32,6 +33,20 @@ export const Navbar = () => {
     checkAdmin();
   }, []);
 
+  // Close dropdowns when clicking outside the navbar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setDropdown(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
   const handleNavClick = () => {
     setOpen(false);
     setDropdown(null);
@@ -42,7 +57,7 @@ export const Navbar = () => {
   };
 
   return (
-    <div className="header">
+    <div className="header" ref={navRef}>
       <div className="hamburger" onClick={() => setOpen(!open)}>
         ☰ Menu
       </div>
