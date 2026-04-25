@@ -23,6 +23,7 @@ export function AdminPaymentLogs() {
   const [logs, setLogs] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10); // you can tweak this
 
@@ -40,6 +41,14 @@ export function AdminPaymentLogs() {
       try {
         const headers = await getAuthHeader();
         const response = await fetch(`${API_URL}/payment/admin/logs`, { headers });
+        
+        if (response.status === 401) {
+          setIsUnauthorized(true);
+          setError("Unauthorized: You do not have permission to access this page.");
+          setLoading(false);
+          return;
+        }
+        
         if (!response.ok) throw new Error('Failed to fetch payment logs');
         const data = await response.json();
         // Map the data to match the type
@@ -56,7 +65,10 @@ export function AdminPaymentLogs() {
         }));
         setLogs(mappedLogs);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        // Suppress logging for expected authorization errors
+        if (!(err instanceof Error && err.message === "Unauthorized: You do not have permission to access this page.")) {
+          setError(err instanceof Error ? err.message : 'An error occurred');
+        }
       } finally {
         setLoading(false);
       }
@@ -70,7 +82,60 @@ export function AdminPaymentLogs() {
   }, [logs]);
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  
+  if (isUnauthorized) {
+    return (
+      <div>
+        <Navbar />
+        <div className="admin-logs-container" style={{ paddingTop: '2rem', textAlign: 'center' }}>
+          <h1 style={{ color: '#d32f2f', marginBottom: '1rem' }}>Access Denied</h1>
+          <p style={{ fontSize: '1.1rem', marginBottom: '2rem', color: '#666' }}>
+            {error}
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#638F77',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            Return to Home
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (error) return (
+    <div>
+      <Navbar />
+      <div className="admin-logs-container" style={{ paddingTop: '2rem', textAlign: 'center' }}>
+        <h1 style={{ color: '#d32f2f' }}>Error</h1>
+        <p>{error}</p>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            padding: '0.75rem 1.5rem',
+            backgroundColor: '#638F77',
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+            fontSize: '1rem'
+          }}
+        >
+          Return to Home
+        </button>
+      </div>
+      <Footer />
+    </div>
+  );
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -82,7 +147,7 @@ export function AdminPaymentLogs() {
   return (
     <div>
       <Navbar />
-      <div className="admin-logs-container">
+      <div className="admin-logs-container" style={{ paddingTop: '2rem' }}>
         <h1>Admin Payment Logs</h1>
         <table className="logs-table">
           <thead>
