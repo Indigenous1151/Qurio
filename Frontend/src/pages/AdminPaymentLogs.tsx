@@ -37,7 +37,7 @@ export function AdminPaymentLogs() {
     const fetchLogs = async () => {
       try {
         const headers = await getAuthHeader();
-        const response = await fetch(`${API_URL}/admin/logs`, { headers });
+        const response = await fetch(`${API_URL}/payment/admin/logs`, { headers });
         if (!response.ok) throw new Error('Failed to fetch payment logs');
         const data = await response.json();
         // Map the data to match the type
