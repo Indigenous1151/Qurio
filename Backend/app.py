@@ -59,7 +59,13 @@ def get_user_id_from_request(request):
     token = auth_header.replace('Bearer ', '')
     try:
         signing_key = jwk_client.get_signing_key_from_jwt(token)
-        payload = jwt.decode(token, signing_key.key, algorithms=['ES256'], audience='authenticated')
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=['ES256'],
+            audience='authenticated',
+            leeway=30
+        )
         return payload['sub']
     except Exception as e:
         print(f"JWT decode error: {e}")

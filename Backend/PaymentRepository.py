@@ -1,3 +1,5 @@
+import os
+from supabase import create_client
 from database.SupabaseClient import SupabaseClient
 
 class PaymentRepository:
@@ -18,6 +20,9 @@ class PaymentRepository:
                       .execute()
             )
 
+            print(f"Admin check for user_id={user_id}, result={result.data}, error={getattr(result, 'error', None)}")
+            if not result.data:
+                return False
             return result.data.get("is_admin", False)
         except Exception as e:
             print(f"Error checking admin: {e}")
@@ -163,15 +168,16 @@ class PaymentRepository:
 
     def get_user_email(self, user_id: str) -> str:
         try:
-            client = self.__db_client.get_client()
-            if not client:
-                raise Exception("Database client is None")
+            service_key = os.getenv("SUPABASE_SECRET_KEY")
+            if not service_key:
+                raise Exception("Supabase service key is not configured")
 
-            user_response = client.auth.admin.get_user_by_id(user_id)
+            admin_client = create_client(os.getenv("SUPABASE_URL", ""), service_key)
+            user_response = admin_client.auth.admin.get_user_by_id(user_id)
             return user_response.user.email if user_response and user_response.user and user_response.user.email else ""
         except Exception as e:
             print(f"Error getting user email: {e}")
-            raise
+            return ""
 
     def get_all_payment_logs_detailed(self) -> list:
         try:
@@ -179,7 +185,7 @@ class PaymentRepository:
             detailed_logs = []
 
             for payment in payments:
-                email = self.get_user_email(payment["user_id"])
+                email = self.get_user_email(payment.get("user_id"))
 
                 detailed_logs.append({
                     "payment_id": payment.get("payment_id"),

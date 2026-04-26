@@ -7,30 +7,57 @@ export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
   const navRef = useRef(null);
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    let mounted = true;
+
     async function checkAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
-  
+
+      if (!mounted) return;
       if (!session?.access_token) {
         setIsAdmin(false);
+        setAdminChecked(true);
         return;
       }
-  
+
       const res = await fetch(`${API_URL}/payment/admin/is-admin`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
       });
-  
+
+      if (!mounted) return;
+      if (res.status === 401) {
+        setIsAdmin(false);
+        setAdminChecked(true);
+        return;
+      }
+
       const json = await res.json();
       setIsAdmin(json.is_admin === true);
+      setAdminChecked(true);
     }
-  
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token) {
+        checkAdmin();
+      } else {
+        setIsAdmin(false);
+        setAdminChecked(true);
+      }
+    });
+
     checkAdmin();
+
+    return () => {
+      mounted = false;
+      authListener?.subscription?.unsubscribe?.();
+    };
   }, []);
 
   // Close dropdowns when clicking outside the navbar
