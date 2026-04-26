@@ -35,7 +35,7 @@ export const BugReportModal = ({ isOpen, onClose }: BugReportModalProps) => {
           'Authorization': `Bearer ${session?.access_token || ''}`
         },
         body: JSON.stringify({
-          message: message.trim()
+          bug_report: message.trim()
         })
       });
 

@@ -17,6 +17,7 @@ class BugReportController:
         bug_report_bp.add_url_rule('/remove', 'remove_bug_report', self.remove_bug_report, methods=['DELETE'])
 
     def add_bug_report(self):
+        print("DEBUG: called add bug report")
         try:
             user_id = self.get_user_id(request)
             if not user_id:
