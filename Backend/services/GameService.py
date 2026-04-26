@@ -24,6 +24,41 @@ class GameService:
         return game
 
     def create_daily_game(self, user):
+        # Check if user has an active daily game
+        active_daily = None
+        for game in self.active_games.values():
+            if game.user == user and game.is_daily:
+                active_daily = game
+                break
+        
+        # If no active game in memory, check database
+        if not active_daily:
+            for game_doc in self.game_repo.active_games_collection.find({"user": user, "is_daily": True}):
+                questions = [Question(q) for q in game_doc.get("questions", [])]
+                game = Game(
+                    game_doc["user"],
+                    questions,
+                    is_daily=True,
+                    game_id=game_doc["game_id"]
+                )
+                game.current_index = game_doc.get("current_index", 0)
+                game.score = game_doc.get("score", 0)
+                game.questions_answered = game_doc.get("questions_answered", 0)
+                game.hints_used = game_doc.get("hints_used", 0)
+                game.skipped = game_doc.get("skipped", 0)
+                self.active_games[game.game_id] = game
+                active_daily = game
+                break
+        
+        # If there's an active daily game, return it
+        if active_daily:
+            return active_daily
+        
+        # Check if user has already played a daily game today
+        if self.game_repo.has_daily_game_today(user):
+            raise Exception("Daily game already played today")
+        
+        # Create new daily game
         questions_data = self.trivia_service.fetch_questions(5)
         questions = [Question(q) for q in questions_data]
 
@@ -99,7 +134,6 @@ class GameService:
             
         # None in memory, so get active games from database for the user
         for game_doc in self.game_repo.active_games_collection.find({"user": user_id}):
-            from models.Question import Question
             questions = [Question(q) for q in game_doc.get("questions", [])]
             game = Game(
                 game_doc["user"],

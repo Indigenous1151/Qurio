@@ -148,6 +148,11 @@ class GameController:
                 "is_daily": game.is_daily
             }), HttpStatus.OK
         except Exception as e:
+            print(f"Error in start_daily_game: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            if str(e) == "Daily game already played today":
+                return jsonify({"error": str(e)}), HttpStatus.COMPLETED
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def submit_answer(self):

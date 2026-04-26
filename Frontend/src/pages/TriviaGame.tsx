@@ -106,6 +106,14 @@ export function TriviaGame() {
     hasFetched.current = true;
 
     const checkServerForActiveGame = async () => {
+      const storedGameId = sessionStorage.getItem('activeGameId');
+
+      if (storedGameId) {
+        console.log("Found game in sessionStorage:", storedGameId);
+        continueGame(storedGameId);
+        return;
+      }
+
       // If routing requests a continueGameId from ClassicGame, use it immediately
       if (continueGameId) {
         console.log("continueGameId found in state:", continueGameId);
@@ -129,7 +137,15 @@ export function TriviaGame() {
         continueGame(data.game_id);
       } else {
         console.log("No active game found, starting new game");
-        startGame();
+        // Only start a new game if we have valid game parameters
+        if (isDaily === undefined) {
+          setError("Game session expired. Please go back and select a game mode.");
+          setLoading(false);
+          // Navigate back to home after a short delay
+          setTimeout(() => navigate('/'), 3000);
+        } else {
+          startGame();
+        }
       }
     };
 
@@ -205,7 +221,16 @@ export function TriviaGame() {
         })
       });
       console.log("Response status:", res.status);
-      if (!res.ok) throw new Error('Failed to start game');
+      if (!res.ok) {
+        const errorData = await res.json();
+
+        if (res.status === 409) {
+          setError("You already completed this game.");
+          return;
+        }
+
+        throw new Error(errorData.error || 'Failed to start game');
+      }
       const data = await res.json();
 
       console.log("Start game data:", data);
@@ -227,8 +252,9 @@ export function TriviaGame() {
       setSelected(null);
       setAnswered(false);
     } catch (err) {
-      console.error("Error in startGame:", err);
-      setError("Failed to start game.");
+      if (import.meta.env.DEV)
+        console.error("Error in startGame:", err);
+      setError(err instanceof Error ? err.message : "Failed to start game.");
     } finally {
       setLoading(false);
     }
@@ -237,7 +263,10 @@ export function TriviaGame() {
   const fetchCurrentQuestion = async (overrideGameId?: string) => {
     const activeId = overrideGameId || gameState?.gameId;
     console.log("Fetching current question, gameId:", activeId);
-    if (!activeId) return;
+    if (!activeId || typeof activeId !== "string") {
+      console.warn("Invalid gameId, skipping fetchCurrentQuestion");
+      return;
+    }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
@@ -414,7 +443,7 @@ export function TriviaGame() {
         <p className="text-red-500">{error}</p>
         <button
           className="bg-[#638F77] text-white px-6 py-2 rounded-lg cursor-pointer border-none"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/")}
         >
           Go Back
         </button>

@@ -1,5 +1,6 @@
 from models.GameResult import GameResult
 from models.Game import Game
+from models.Question import Question
 
 class GameRepository:
     def __init__(self, db_client):
@@ -56,7 +57,6 @@ class GameRepository:
                 return None
 
             # Reconstruct the Game object from stored data
-            from models.Question import Question
             questions = [Question(q) for q in game_data.get("questions", [])]
 
             game = Game(game_data["user"], questions, is_daily=game_data.get("is_daily", False), game_id=game_data["game_id"])
@@ -81,3 +81,16 @@ class GameRepository:
         except Exception as e:
             print(f"Error deleting active game: {e}")
             return False
+
+    def has_daily_game_today(self, user_id: str) -> bool:
+        """Check if user has completed a daily game today"""
+        import datetime
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        # Find results where user played a daily game today
+        result = self.results_collection.find_one({
+            "user": user_id,
+            "is_daily": True,
+            "date_played": {"$regex": f"^{today}"}
+        })
+        print(f"RESULT: {result}")
+        return result is not None
