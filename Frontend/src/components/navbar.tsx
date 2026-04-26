@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom';
 import '../details/Navbar.css';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabaseClient/supabaseClient';
+import { BugReportModal } from './BugReportModal';
 
 export const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [dropdown, setDropdown] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
+  const [isBugReportOpen, setIsBugReportOpen] = useState(false);
   const navRef = useRef(null);
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -145,6 +147,20 @@ export const Navbar = () => {
         </li>
         )}
 
+        {/* Report a Bug */}
+        <li>
+          <span
+            className="nav-item"
+            onClick={() => {
+              setIsBugReportOpen(true);
+              setOpen(false);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            Report a Bug
+          </span>
+        </li>
+
         {/* Logout */}
         <li>
           <Link to="/logout" onClick={handleNavClick}>Logout</Link>
@@ -152,6 +168,8 @@ export const Navbar = () => {
        
 
       </ul>
+
+      <BugReportModal isOpen={isBugReportOpen} onClose={() => setIsBugReportOpen(false)} />
     </div>
   );
 };

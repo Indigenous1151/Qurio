@@ -18,12 +18,17 @@ class BugReportController:
 
     def add_bug_report(self):
         try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
             data = request.get_json()
             report_text = data.get("bug_report")
 
             if not report_text:
                 return jsonify({"error": "Missing bug_report"})
-            sender_id = None
+
+            sender_id = user_id
 
             self.__service.add_bug_report(sender_id, report_text)
 
