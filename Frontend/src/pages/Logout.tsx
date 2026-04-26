@@ -4,13 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient/supabaseClient";
 import '../details/Logout.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export function Logout() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const logout = async () => {
       try {
-        await fetch("http://127.0.0.1:5001/auth/signout", {
+        await fetch(`${API_URL}/auth/signout`, {
           method: "POST",
           credentials: "include",
         });
