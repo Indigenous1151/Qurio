@@ -15,6 +15,7 @@ class BugReportController:
         bug_report_bp.add_url_rule('/add', 'add_bug_report', self.add_bug_report, methods=['POST']) 
         bug_report_bp.add_url_rule('/get-reports', 'get_reports', self.get_reports, methods=['GET'])
         bug_report_bp.add_url_rule('/remove', 'remove_bug_report', self.remove_bug_report, methods=['DELETE'])
+        bug_report_bp.add_url_rule('/update-status', 'update_status', self.update_status, methods=['PATCH'])
 
     def add_bug_report(self):
         print("DEBUG: called add bug report")
@@ -63,5 +64,23 @@ class BugReportController:
 
             return jsonify({"message": "Bug report deleted"}), HttpStatus.OK
 
+        except Exception as e:
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+
+    def update_status(self):
+        """Converts status of bug report to the new status passing in the request."""
+        try:
+            data = request.get_json()
+            report_id = data.get("report_id")
+            status = data.get("status")
+
+            if not report_id:
+                return jsonify({"error": "Missing report_id"}), HttpStatus.BAD_REQUEST
+
+            if not status:
+                return jsonify({"error": "status is None"}), HttpStatus.BAD_REQUEST
+
+            self.__service.update_report(report_id, status)
+            return jsonify({"message": "Bug report status updated"}), HttpStatus.OK
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR

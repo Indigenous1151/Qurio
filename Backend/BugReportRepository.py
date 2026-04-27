@@ -60,3 +60,20 @@ class BugReportRepository:
         except Exception as e:
             print(f"Error deleting report: {e}")
             return False
+
+    def update_report(self, report_id: str, status: str):
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            _ = (
+                client.table("bug_reports")
+                    .update({"status": status})
+                    .eq("report_id", report_id)
+                    .execute()
+            )
+            return True
+        except Exception as e:
+            print(f"Error updating status of report: {e}")
+            return False

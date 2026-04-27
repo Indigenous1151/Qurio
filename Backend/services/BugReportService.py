@@ -20,3 +20,6 @@ class BugReportService:
         if not success:
             raise Exception("Failed to delete bug report")
         return True
+    
+    def update_report(self, report_id: str, status: str):
+        return self.__repo.update_report(report_id, status)
