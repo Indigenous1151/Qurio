@@ -66,6 +66,12 @@ class StatisticsController:
             profile_rows = profile_response.data
             username = profile_rows[0]["username"] if profile_rows else "Unknown User"
 
+            rank = self.calculate_user_rank(client, user_id)
+
+            client.table("statistics").update({
+                "rank": rank
+            }).eq("user_id", user_id).execute()
+
             statistics = Statistics(
                 username=username,
                 games_played=stats_data.get("games_played", 0),
@@ -73,7 +79,7 @@ class StatisticsController:
                 correct_answers=stats_data.get("correct_answers", 0),
                 accuracy=stats_data.get("accuracy", 0.0),
                 average_score=stats_data.get("average_score", 0.0),
-                rank=stats_data.get("rank", 0),
+                rank=rank,
                 daily_games_played=stats_data.get("daily_games_played", 0),
                 classic_games_played=stats_data.get("classic_games_played", 0)
             )
@@ -82,3 +88,35 @@ class StatisticsController:
 
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+        
+    def calculate_user_rank(self, client, user_id):
+        stats_response = (
+            client.table("statistics")
+            .select("user_id, correct_answers, accuracy, games_played")
+            .execute()
+        )
+
+        stats_rows = stats_response.data
+
+        if not stats_rows:
+            return 0
+
+        # Sort users by:
+        # 1. correct_answers, highest first
+        # 2. accuracy, highest first
+        # 3. games_played, highest first
+        sorted_stats = sorted(
+            stats_rows,
+            key=lambda row: (
+                row.get("correct_answers", 0),
+                row.get("accuracy", 0.0),
+                row.get("games_played", 0)
+            ),
+            reverse=True
+        )
+
+        for index, row in enumerate(sorted_stats):
+            if row.get("user_id") == user_id:
+                return index + 1
+
+        return 0
