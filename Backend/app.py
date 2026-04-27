@@ -104,7 +104,8 @@ group_service = GroupService(group_repo = group_repo,user_repo=user_repo,trivia_
 game_service = GameService(
     question_repo=question_repo,
     game_repo=game_repo,
-    trivia_service=trivia_service
+    trivia_service=trivia_service,
+    user_repo=user_repo
 )
 payment_service = PaymentService(repo = payment_repo, user_repo=user_repo, auth_service=auth_service)
 bug_report_service = BugReportService(bug_report_repo = bug_report_repo)

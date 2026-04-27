@@ -111,7 +111,6 @@ export const Navbar = () => {
             <li><Link to="/UpdatePersonalInformation" onClick={handleNavClick}>Personal Info</Link></li>
             <li><Link to="/UpdatePublicInformation" onClick={handleNavClick}>Public Info</Link></li>
             <li><Link to="/personal-statistics" onClick={handleNavClick}>Statistics</Link></li>
-            <li><Link to="/get-currency" onClick={handleNavClick}>Purchase Currency</Link></li>
           </ul>
         </li>
 
@@ -149,6 +148,9 @@ export const Navbar = () => {
         </li>
         )}
 
+        {/* Purchase Currency*/}
+        <li><Link to="/get-currency" onClick={handleNavClick}>Purchase Currency</Link></li>
+        
         {/* Report a Bug */}
         <li>
           <span

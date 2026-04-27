@@ -35,6 +35,9 @@ export function TriviaGame() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [answered, setAnswered] = useState(false);
+  const [currency, setCurrency] = useState<number>(0);
+  const [currencyError, setCurrencyError] = useState("");
+  const [flashCurrencyRed, setFlashCurrencyRed] = useState(false);
   const [gameState, setGameState] = useState<null | {
     gameId: string;
     currentQuestion: Question;
@@ -101,9 +104,32 @@ export function TriviaGame() {
     }
   };
 
+  const fetchCurrency = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+  
+    if (!user) return;
+  
+    const { data: profile, error } = await supabase
+      .from("public_profile")
+      .select("currency")
+      .eq("user_id", user.id)
+      .maybeSingle();
+  
+    if (error) {
+      console.error("Error fetching currency:", error);
+      return;
+    }
+  
+    setCurrency(profile?.currency ?? 0);
+  };
+
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
+
+    fetchCurrency();
 
     const checkServerForActiveGame = async () => {
       const storedGameId = sessionStorage.getItem('activeGameId');
@@ -160,9 +186,11 @@ export function TriviaGame() {
 
   const handleSkip = async () => {
     if (answered || !gameState) return;
+  
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
+  
       const res = await fetch(`${import.meta.env.VITE_API_URL}/game/skip`, {
         method: 'POST',
         headers: {
@@ -171,12 +199,27 @@ export function TriviaGame() {
         },
         body: JSON.stringify({ game_id: gameState.gameId })
       });
-      if (!res.ok) throw new Error('Skip failed');
-      const skipData = await res.json();
-      setGameState(prev => prev ? { ...prev, skipped: skipData.skipped } : null);
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        setCurrencyError(data.error || "Not enough currency to skip a question.");
+        setFlashCurrencyRed(true);
+        setTimeout(() => setFlashCurrencyRed(false), 1500);
+        setTimeout(() => setCurrencyError(""), 2000);
+        return;
+      }
+  
+      setGameState(prev => prev ? { ...prev, skipped: data.skipped } : null);
+      setCurrencyError("");
+      await fetchCurrency();
       await fetchCurrentQuestion();
     } catch (err) {
       console.error(err);
+      setCurrencyError("Something went wrong while skipping.");
+      setFlashCurrencyRed(true);
+      setTimeout(() => setFlashCurrencyRed(false), 1500);
+      setTimeout(() => setCurrencyError(""), 2000);
     }
   };
 
@@ -380,18 +423,12 @@ export function TriviaGame() {
   };
 
   const handleHint = async () => {
-    console.log("DEBUG: In handleHint")
-    // check if hint is necessary
-    if (answered || !gameState) {
-      console.log("DEBUG: In handleHint", { gameState, answered });
-      return;
-    }
-    console.log("DEBUG: debug is necessary")
+    if (answered || !gameState) return;
+  
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log("Session in hint:", session);
       if (!session?.access_token) return;
-      console.log("not session passed");
+  
       const res = await fetch(`${import.meta.env.VITE_API_URL}/game/hint`, {
         method: 'POST',
         headers: {
@@ -400,23 +437,38 @@ export function TriviaGame() {
         },
         body: JSON.stringify({ game_id: gameState.gameId })
       });
-
-      if (!res.ok) throw new Error('Hint failed');
-      const q = await res.json(); // updated question from backend
-      console.log("HINT RESPONSE:", q);
-      console.log("Removed answers:", q.removed_answers);
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        setCurrencyError(data.error || "Not enough currency for a hint.");
+        setFlashCurrencyRed(true);
+        setTimeout(() => setFlashCurrencyRed(false), 1500);
+        setTimeout(() => setCurrencyError(""), 2000);
+        return;
+      }
+  
+      const q = data;
+      await fetchCurrency();
+  
       const availableIncorrect = q.incorrect_answers.filter(
         (opt: any) => !q.removed_answers.includes(opt)
       );
-      console.log("AvailableIncorrect" + availableIncorrect);
+  
       setGameState(prev => prev ? {
         ...prev,
         currentQuestion: q,
         hintsUsed: prev.hintsUsed + 1,
         options: shuffleArray([q.correct_answer, ...availableIncorrect])
       } : null);
+  
+      setCurrencyError("");
     } catch (err) {
       console.error(err);
+      setCurrencyError("Something went wrong while buying a hint.");
+      setFlashCurrencyRed(true);
+      setTimeout(() => setFlashCurrencyRed(false), 1500);
+      setTimeout(() => setCurrencyError(""), 2000);
     }
   };
 
@@ -481,13 +533,42 @@ export function TriviaGame() {
         </h1>
 
         <div className="bg-[#638F77] rounded-2xl p-6 sm:p-8 flex flex-col gap-5">
-
           
+
+        <div className="flex justify-center mt-1 mb-2">
+        <div
+          className={`inline-flex items-center gap-3 rounded-lg px-4 py-2 shadow-sm border transition-all duration-200 ${
+            flashCurrencyRed
+              ? "bg-red-100 border-red-300"
+              : "bg-[#eef4f0] border-[#d8e2db]"
+          }`}
+        >
+          <span className="text-xl">💰</span>
+          <div className="text-left">
+            <div className="text-[10px] uppercase tracking-widest text-[#888]">
+              Currency
+            </div>
+            <div
+              className={`font-extrabold text-base sm:text-lg ${
+                flashCurrencyRed ? "text-red-700" : "text-[#638F77]"
+              }`}
+            >
+              {currency}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {currencyError && (
+        <div className="text-red-200 text-sm font-medium text-center -mt-1 mb-1">
+          {currencyError}
+        </div>
+      )}
+
           <div className="flex justify-between items-center text-white text-sm">
             <span className="font-semibold">Question {gameState.currentIndex + 1} of {gameState.totalQuestions}</span>
             <span className="font-semibold">Score: {gameState.score}</span>
           </div>
-
          
           <div className="w-full bg-white/30 rounded-full h-2">
             <div

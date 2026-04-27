@@ -3,14 +3,16 @@ from models.Question import Question
 from models.GameResult import GameResult
 from GameRepository import GameRepository
 from models.MultipleChoiceHint import MultipleChoiceHint
+from UserRepository import UserRepository
 
 
 class GameService:
-    def __init__(self, question_repo, game_repo: GameRepository, trivia_service):
+    def __init__(self, question_repo, game_repo: GameRepository, trivia_service, user_repo: UserRepository):
         self.question_repo = question_repo
         self.game_repo = game_repo
         self.trivia_service = trivia_service
         self.active_games: dict[str, Game] = {}
+        self.user_repo = user_repo
 
     def create_classic_game(self, user, count=10, category=None, difficulty=None):
         questions_data = self.trivia_service.fetch_questions(count, category, difficulty)
@@ -174,3 +176,34 @@ class GameService:
         self.game_repo.delete_active_game(game_id)
 
         return result
+    
+    def buy_hint(self, user_id: str, game_id: str) -> Question | None:
+        hint_cost = 25
+
+        current_currency = self.user_repo.get_user_currency(user_id)
+        if current_currency < hint_cost:
+            raise Exception("Not enough currency for a hint")
+
+        success = self.user_repo.deduct_currency(user_id, hint_cost)
+        if not success:
+            raise Exception("Failed to deduct currency for hint")
+
+        updated_question = self.get_hint(game_id)
+        if updated_question is None:
+            raise Exception("Could not get hint")
+
+        return updated_question
+
+
+    def buy_skip(self, user_id: str, game_id: str) -> None:
+        skip_cost = 50
+
+        current_currency = self.user_repo.get_user_currency(user_id)
+        if current_currency < skip_cost:
+            raise Exception("Not enough currency to skip a question")
+
+        success = self.user_repo.deduct_currency(user_id, skip_cost)
+        if not success:
+            raise Exception("Failed to deduct currency for skip")
+
+        self.skip_question(game_id)

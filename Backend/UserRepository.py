@@ -284,4 +284,16 @@ class UserRepository:
             return result.data.get("is_admin", False)
         except Exception as e:
             print(f"Error checking admin: {e}")
+        
+    def deduct_currency(self, user_id: str, amount: int) -> bool:
+        try:
+            current_currency = self.get_user_currency(user_id)
+
+            if current_currency < amount:
+                return False
+
+            new_total = current_currency - amount
+            return self.update_user_currency(user_id, new_total)
+        except Exception as e:
+            print(f"Error deducting currency: {e}")
             return False
