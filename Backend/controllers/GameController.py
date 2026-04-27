@@ -165,15 +165,26 @@ class GameController:
 
     def skip_question(self):
         try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
             data = request.get_json()
             game_id = data['game_id']
-            self.service.skip_question(game_id)
+
+            self.service.buy_skip(user_id, game_id)
+
             game = self.service.get_game(game_id)
             if game is None:
                 return jsonify({"error": "Game not found"}), HttpStatus.NOT_FOUND
-            return jsonify({"skipped": game.skipped}), HttpStatus.OK
+
+            return jsonify({
+                "skipped": game.skipped,
+                "message": "Question skipped successfully"
+            }), HttpStatus.OK
+
         except Exception as e:
-            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+            return jsonify({"error": str(e)}), HttpStatus.BAD_REQUEST
 
     def end_game(self):
         try:
@@ -196,17 +207,22 @@ class GameController:
 
     def get_hint(self):
         try:
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
+
             data = request.get_json()
             game_id = data['game_id']
-            updated_question: Question | None = self.service.get_hint(game_id)
+
+            updated_question = self.service.buy_hint(user_id, game_id)
 
             if updated_question is None:
                 raise Exception("updated_question returned None")
 
-            # send back the updated_question for use in front end
             return jsonify(updated_question.to_dict()), HttpStatus.OK
+
         except Exception as e:
-            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+            return jsonify({"error": str(e)}), HttpStatus.BAD_REQUEST
 
     def get_current_question(self):
         try:
