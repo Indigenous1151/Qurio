@@ -107,6 +107,7 @@ export const Navbar = () => {
           </span>
 
           <ul className={`dropdown-menu ${dropdown === 'profile' ? 'show' : ''}`}>
+            <li><Link to="/user-information" onClick={handleNavClick}>User Information</Link></li>
             <li><Link to="/UpdatePersonalInformation" onClick={handleNavClick}>Personal Info</Link></li>
             <li><Link to="/UpdatePublicInformation" onClick={handleNavClick}>Public Info</Link></li>
             <li><Link to="/personal-statistics" onClick={handleNavClick}>Statistics</Link></li>
