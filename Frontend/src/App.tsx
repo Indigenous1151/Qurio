@@ -26,6 +26,7 @@ import { GetCurrency } from './pages/GetCurrency'
 import { GetCurrencyPayment } from './pages/GetCurrencyPayment'
 import { ViewNotification } from './pages/ViewNotification'
 import { AdminPaymentLogs } from './pages/AdminPaymentLogs'
+import { AdminGetReports } from './pages/AdminGetReports'
 import {UserInformation} from './pages/UserInformation'
 function App() {
  
@@ -59,6 +60,7 @@ function App() {
           <Route path="/groups/:groupId" element={<GroupDetails />} />
           <Route path="/admin/payment" element={<AdminPayment />} />
           <Route path="/admin/payment-logs" element={<AdminPaymentLogs />} />
+          <Route path="/admin/get-reports" element={<AdminGetReports />} />
           <Route path="/get-currency" element={<GetCurrency />} />
           <Route path = "/get-currency-payment" element={<GetCurrencyPayment />} />
           <Route path="/view-notifications" element={<ViewNotification />} />

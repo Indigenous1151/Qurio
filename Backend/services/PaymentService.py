@@ -1,16 +1,18 @@
 from PaymentRepository import PaymentRepository
 from UserRepository import UserRepository
+from services.AuthService import AuthService
 from models.Payment import Payment
 from datetime import datetime
 import re
 
 class PaymentService:
-    def __init__(self, repo: PaymentRepository, user_repo: UserRepository):
+    def __init__(self, repo: PaymentRepository, user_repo: UserRepository, auth_service: AuthService):
         self.__repo = repo
         self.__user_repo = user_repo
+        self.__auth_service = auth_service
 
     def __check_admin(self, user_id: str):
-        if not self.__repo.is_admin(user_id):
+        if not self.__auth_service.is_admin(user_id):
             raise Exception("Unauthorized: Admin access required")
 
     def configure_payment_method(self, user_id: str, payment_type: str):
@@ -25,8 +27,6 @@ class PaymentService:
         self.__check_admin(user_id)
         return self.__repo.delete_payment_config(config_id)
     
-    def is_admin(self, user_id: str) -> bool:
-        return self.__repo.is_admin(user_id)
     def get_available_payment_configs(self) -> list:
         return self.__repo.get_active_payment_configs()
     

@@ -28,7 +28,7 @@ class UserRepository:
             from supabase import create_client
             import os
             # create fresh client every time
-            client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SECRET_KEY"))
+            client = create_client(os.getenv("SUPABASE_URL",""), os.getenv("SUPABASE_SECRET_KEY",""))
             client.auth.admin.update_user_by_id(
                 personal_info.get_user_id(),
                 {"user_metadata": {"display_name": personal_info.get_full_name()},
@@ -44,6 +44,8 @@ class UserRepository:
     def save_public_info(self, public_info: PublicInformation) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database Client is None")
             client.table("public_profile").upsert({
                 "user_id": public_info.get_user_id(),
                 "username": public_info.get_username(),
@@ -63,6 +65,8 @@ class UserRepository:
             dict containing columns id, user_id, username, bio, created_at, updated_at
         """
         client = self.__db_client.get_client()
+        if not client:
+                raise Exception("Database Client is None")
 
         result = (
             client.table("public_profile")
@@ -86,13 +90,15 @@ class UserRepository:
 
         """
         client = self.__db_client.get_client()
+        if not client:
+                raise Exception("Database Client is None")
 
         response = client.auth.sign_up({
             "email": email,
             "password": password
         })
 
-        if not response:
+        if not response or not response.user:
             raise Exception("Failed to create user")
 
         user_id = response.user.id
@@ -111,6 +117,8 @@ class UserRepository:
 
     def login(self, email: str, password: str):
         client = self.__db_client.get_client()
+        if not client:
+                raise Exception("Database Client is None")
 
         response = client.auth.sign_in_with_password({
             "email": email,
@@ -124,17 +132,19 @@ class UserRepository:
 
     def sign_out(self) -> bool:
         client = self.__db_client.get_client()
-
+        if not client:
+                raise Exception("Database Client is None")
         response = client.auth.sign_out()
 
-        if response.error:
+        if not response or response.error:
             raise Exception("Failed to sign out")
 
         return True
 
     def forgot_password(self, email: str) -> bool:
         client = self.__db_client.get_client()
-
+        if not client:
+                raise Exception("Database Client is None")
         try:
             client.auth.reset_password_for_email(
                 email,
@@ -159,7 +169,8 @@ class UserRepository:
 
     def reset_password(self, new_password: str) -> bool:
         client = self.__db_client.get_client()
-
+        if not client:
+                raise Exception("Database Client is None")
         try:
             client.auth.update_user({
                 "password": new_password
@@ -172,6 +183,8 @@ class UserRepository:
     def search_by_username(self, username: str) -> list:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database Client is None")
             result = client.table("public_profile").select("*").ilike(
                 "username", f"%{username}%"
             ).execute()
@@ -183,6 +196,8 @@ class UserRepository:
     def search_by_username_exact(self, user_id: str) -> dict:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database Client is None")
             result = client.table("public_profile").select("*").eq(
                 "user_id", user_id
             ).single().execute()
@@ -194,6 +209,8 @@ class UserRepository:
     def search_by_email(self, email: str) -> list:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database Client is None")
             result = client.table("public_profile").select("*").ilike(
                 "email", f"%{email}%"
             ).execute()
@@ -205,6 +222,8 @@ class UserRepository:
     def get_user_currency(self, user_id: str) -> int:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database Client is None")
             result = (
                 client.table("public_profile")
                 .select("currency")
@@ -225,6 +244,8 @@ class UserRepository:
     def update_user_currency(self, user_id: str, currency: int) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database Client is None")
             client.table("public_profile").update({
                 "currency": currency
             }).eq("user_id", user_id).execute()
@@ -242,4 +263,25 @@ class UserRepository:
         except Exception as e:
             print(f"Error adding currency: {e}")
             return False
-        
+
+    def is_admin(self, user_id: str) -> bool:
+        try:
+            client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
+            result = (
+                client.table("public_profile")
+                      .select("is_admin")
+                      .eq("user_id", user_id)
+                      .single()
+                      .execute()
+            )
+
+            print(f"Admin check for user_id={user_id}, result={result.data}, error={getattr(result, 'error', None)}")
+            if not result.data:
+                return False
+            return result.data.get("is_admin", False)
+        except Exception as e:
+            print(f"Error checking admin: {e}")
+            return False

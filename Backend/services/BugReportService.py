@@ -12,8 +12,8 @@ class BugReportService:
             raise Exception("Failed to save bug report")
         return True
 
-    def get_reports(self, user_id: str) -> list:
-        return self.__repo.get_reports(user_id)
+    def get_reports(self) -> list:
+        return self.__repo.get_reports()
     
     def remove_bug_report(self, report_id: str) -> bool:
         success = self.__repo.remove_bug_report(report_id)

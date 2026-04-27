@@ -6,28 +6,6 @@ class PaymentRepository:
     def __init__(self, db_client: SupabaseClient):
         self.__db_client = db_client
 
-    def is_admin(self, user_id: str) -> bool:
-        try:
-            client = self.__db_client.get_client()
-            if not client:
-                raise Exception("Database client is None")
-
-            result = (
-                client.table("public_profile")
-                      .select("is_admin")
-                      .eq("user_id", user_id)
-                      .single()
-                      .execute()
-            )
-
-            print(f"Admin check for user_id={user_id}, result={result.data}, error={getattr(result, 'error', None)}")
-            if not result.data:
-                return False
-            return result.data.get("is_admin", False)
-        except Exception as e:
-            print(f"Error checking admin: {e}")
-            return False
-
     def save_payment_config(self, payment_type: str):
         client = self.__db_client.get_client()
         if not client:

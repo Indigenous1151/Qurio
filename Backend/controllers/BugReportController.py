@@ -40,14 +40,16 @@ class BugReportController:
 
     def get_reports(self):
         try:
-            report_id = request.args.get("report_id")
+            user_id = self.get_user_id(request)
+            if not user_id:
+                return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
 
-            reports = self.__service.get_reports(report_id)
+            reports = self.__service.get_reports()
 
-            return jsonify({"reports": reports})
+            return jsonify({"reports": reports}), HttpStatus.OK
 
         except Exception as e:
-            return jsonify({"error": str(e)})
+            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
     def remove_bug_report(self):
         try:

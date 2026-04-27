@@ -29,28 +29,29 @@ class BugReportRepository:
             print(f"Error saving bug report: {e}")
             return False
 
-    def get_reports(self, report_id: str) -> dict:
+    def get_reports(self) -> list:
         try:
             client = self.__db_client.get_client()
             if not client:
                 raise Exception("Database client is None")
+
             result = (
                 client.table("bug_reports")
                 .select("*")
-                .eq("report_id", report_id)
                 .execute()
             )
-            if result.data and len(result.data) > 0:
-                return result.data[0]
 
-            return {}
+            return result.data or []
         except Exception as e:
-            print(f"Error fetching report: {e}")
-            return {}
+            print(f"Error fetching reports: {e}")
+            return []
 
     def remove_bug_report(self, report_id: str) -> bool:
         try:
             client = self.__db_client.get_client()
+            if not client:
+                raise Exception("Database client is None")
+
             client.table("bug_reports") \
                 .delete() \
                 .eq("report_id", report_id) \

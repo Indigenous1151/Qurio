@@ -1,13 +1,15 @@
 from flask import Blueprint, request, jsonify
 from services.PaymentService import PaymentService
+from services.AuthService import AuthService
 from utils.HttpStatus import HttpStatus
 
 
 payment_bp = Blueprint('payment', __name__, url_prefix='/payment')
 
 class PaymentController:
-    def __init__(self, service: PaymentService,get_user_id_func, notification_service=None):
+    def __init__(self, service: PaymentService, auth_service: AuthService,get_user_id_func, notification_service=None):
         self.__service: PaymentService = service
+        self.__auth_service: AuthService = auth_service
         self.__notification_service = notification_service
         self.get_user_id = get_user_id_func
         self.__register_routes()
@@ -29,7 +31,7 @@ class PaymentController:
             print(user_id)
             if not user_id:
                 return jsonify({"error": "Unauthorized"}), HttpStatus.UNAUTHORIZED
-            admin = self.__service.is_admin(user_id)
+            admin = self.__auth_service.is_admin(user_id)
             return jsonify({"is_admin": admin}), HttpStatus.OK
         except Exception as e:
             print(e)

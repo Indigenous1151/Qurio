@@ -34,7 +34,7 @@ class AuthService:
         personal = PersonalInformation(
             user_id=user_id,
             full_name=user.user_metadata.get("full_name", ""),
-            email=user.email
+            email=user.email or ""
         )
 
         public_data = self.__repo.get_public_profile(user_id)
@@ -56,3 +56,6 @@ class AuthService:
     
     def reset_password(self, new_password: str):
         return self.__repo.reset_password(new_password)
+    
+    def is_admin(self, user_id: str) -> bool:
+        return self.__repo.is_admin(user_id)

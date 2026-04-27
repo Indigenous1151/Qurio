@@ -144,6 +144,7 @@ export const Navbar = () => {
           <ul className={`dropdown-menu ${dropdown === 'admin' ? 'show' : ''}`}>
             <li><Link to="/admin/dashboard" onClick={handleNavClick}>Admin Dashboard</Link></li>
             <li><Link to="/admin/payment-logs" onClick={handleNavClick}>Payment Logs</Link></li>
+            <li><Link to="/admin/get-reports" onClick={handleNavClick}>Bug Reports</Link></li>
           </ul>
         </li>
         )}

@@ -106,20 +106,49 @@ game_service = GameService(
     game_repo=game_repo,
     trivia_service=trivia_service
 )
-payment_service = PaymentService(repo = payment_repo, user_repo=user_repo)
+payment_service = PaymentService(repo = payment_repo, user_repo=user_repo, auth_service=auth_service)
 bug_report_service = BugReportService(bug_report_repo = bug_report_repo)
 
 
 # Controller Creation
-UserController(service=user_service, get_user_id_func=get_user_id_from_request)
-AuthController(service=auth_service, get_user_id_func=get_user_id_from_request)
-GameController(game_service=game_service, get_user_id_func=get_user_id_from_request)
-PaymentController(service=payment_service,get_user_id_func=get_user_id_from_request, notification_service=notification_service)
-FriendController(service=friend_service, get_user_id_func=get_user_id_from_request, notification_service=notification_service)
-GroupController(service=group_service, get_user_id_func=get_user_id_from_request)
-StatisticsController(get_user_id_func=get_user_id_from_request)
-BugReportController(service=bug_report_service, get_user_id_func=get_user_id_from_request)
-NotificationController(service=notification_service, get_user_id_func=get_user_id_from_request)
+UserController(
+    service=user_service,
+    get_user_id_func=get_user_id_from_request
+)
+AuthController(
+    service=auth_service,
+    get_user_id_func=get_user_id_from_request
+)
+GameController(
+    game_service=game_service,
+    get_user_id_func=get_user_id_from_request
+)
+PaymentController(
+    service=payment_service,
+    auth_service=auth_service,
+    get_user_id_func=get_user_id_from_request,
+    notification_service=notification_service
+)
+FriendController(
+    service=friend_service,
+    get_user_id_func=get_user_id_from_request,
+    notification_service=notification_service
+)
+GroupController(
+    service=group_service,
+    get_user_id_func=get_user_id_from_request
+)
+StatisticsController(
+    get_user_id_func=get_user_id_from_request
+)
+BugReportController(
+    service=bug_report_service,
+    get_user_id_func=get_user_id_from_request
+)
+NotificationController(
+    service=notification_service,
+    get_user_id_func=get_user_id_from_request
+)
 
 app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)
