@@ -182,23 +182,52 @@ class PaymentRepository:
     def get_all_payment_logs_detailed(self) -> list:
         try:
             payments = self.get_payment_logs()
+            
+            # Get unique user IDs
+            unique_user_ids = list(set(p.get("user_id") for p in payments if p.get("user_id")))
+            
+            # Fetch all emails in bulk with retry logic
+            service_key = os.getenv("SUPABASE_SECRET_KEY")
+            if not service_key:
+                raise Exception("Supabase service key is not configured")
+            
+            admin_client = create_client(os.getenv("SUPABASE_URL", ""), service_key)
+            
+            # Build email lookup map with retry logic
+            email_map = {}
+            max_retries = 3
+            
+            for user_id in unique_user_ids:
+                for attempt in range(max_retries):
+                    try:
+                        user_response = admin_client.auth.admin.get_user_by_id(user_id)
+                        email_map[user_id] = user_response.user.email if user_response and user_response.user else ""
+                        break  # Success, exit retry loop
+                    except Exception as e:
+                        print(f"Attempt {attempt + 1}/{max_retries} - Error getting email for user {user_id}: {e}")
+                        if attempt == max_retries - 1:
+                            # Final attempt failed, set empty email
+                            email_map[user_id] = ""
+                        else:
+                            import time
+                            time.sleep(2 ** attempt)  # Exponential backoff
+            
+            # Build detailed logs using the map
             detailed_logs = []
-
             for payment in payments:
-                email = self.get_user_email(payment.get("user_id"))
-
+                user_id = payment.get("user_id")
                 detailed_logs.append({
                     "payment_id": payment.get("payment_id"),
                     "created_at": payment.get("created_at"),
-                    "user_id": payment.get("user_id"),
-                    "email": email,
+                    "user_id": user_id,
+                    "email": email_map.get(user_id, ""),
                     "amount": payment.get("amount"),
                     "currency_purchased": payment.get("currency_purchased"),
                     "payment_type": payment.get("payment_type"),
                     "status": payment.get("status"),
                     "payment_code": payment.get("payment_code"),
                 })
-
+            
             return detailed_logs
         except Exception as e:
             print(f"Error building detailed payment logs: {e}")
