@@ -35,6 +35,7 @@ export function TriviaGame() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [answered, setAnswered] = useState(false);
+  const [currency, setCurrency] = useState<number>(0);
   const [gameState, setGameState] = useState<null | {
     gameId: string;
     currentQuestion: Question;
@@ -101,9 +102,32 @@ export function TriviaGame() {
     }
   };
 
+  const fetchCurrency = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+  
+    if (!user) return;
+  
+    const { data: profile, error } = await supabase
+      .from("public_profile")
+      .select("currency")
+      .eq("user_id", user.id)
+      .maybeSingle();
+  
+    if (error) {
+      console.error("Error fetching currency:", error);
+      return;
+    }
+  
+    setCurrency(profile?.currency ?? 0);
+  };
+
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
+
+    fetchCurrency();
 
     const checkServerForActiveGame = async () => {
       const storedGameId = sessionStorage.getItem('activeGameId');
@@ -174,6 +198,7 @@ export function TriviaGame() {
       if (!res.ok) throw new Error('Skip failed');
       const skipData = await res.json();
       setGameState(prev => prev ? { ...prev, skipped: skipData.skipped } : null);
+      await fetchCurrency();
       await fetchCurrentQuestion();
     } catch (err) {
       console.error(err);
@@ -403,6 +428,7 @@ export function TriviaGame() {
 
       if (!res.ok) throw new Error('Hint failed');
       const q = await res.json(); // updated question from backend
+      await fetchCurrency();
       console.log("HINT RESPONSE:", q);
       console.log("Removed answers:", q.removed_answers);
       const availableIncorrect = q.incorrect_answers.filter(
@@ -481,13 +507,24 @@ export function TriviaGame() {
         </h1>
 
         <div className="bg-[#638F77] rounded-2xl p-6 sm:p-8 flex flex-col gap-5">
-
           
+
+        <div className="inline-flex items-center gap-3 bg-[#eef4f0] border border-[#d8e2db] rounded-lg px-4 py-2 shadow-sm">
+            <span className="text-xl">💰</span>
+            <div className="text-left">
+              <div className="text-[10px] uppercase tracking-widest text-[#888]">
+                Currency
+              </div>
+              <div className="text-[#638F77] font-extrabold text-base sm:text-lg">
+                {currency}
+              </div>
+            </div>
+          </div>
+
           <div className="flex justify-between items-center text-white text-sm">
             <span className="font-semibold">Question {gameState.currentIndex + 1} of {gameState.totalQuestions}</span>
             <span className="font-semibold">Score: {gameState.score}</span>
           </div>
-
          
           <div className="w-full bg-white/30 rounded-full h-2">
             <div
