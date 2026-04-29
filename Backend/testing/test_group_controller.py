@@ -201,6 +201,7 @@ def test_create_group_question_set_success(app, controller, mock_group_service, 
     # Assert
     assert status == HttpStatus.CREATED
     assert data["message"] == "Group game created"
+    mock_group_service.get_group.assert_called_once()
     mock_group_service.create_game.assert_called_once()
     assert mock_notification_service.create_notification.call_count == 2
 
