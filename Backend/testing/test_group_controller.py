@@ -291,4 +291,33 @@ def test_create_group_question_set_success(app, controller, mock_group_service, 
     assert mock_notification_service.create_notification.call_count == 2
 
 def test_create_group_question_set_exception(app, controller, mock_group_service, mock_notification_service, mock_auth):
-    pass
+    # Arrange
+    mock_group_service.get_group.return_value = {
+        "group_id": "g1",
+        "members": ["member1-id"]
+    }
+
+    mock_response = MagicMock()
+    mock_response.data = []  # supabase returned no rows
+
+    mock_group_service.create_game.return_value = mock_response
+
+    with app.test_request_context(
+        "/group/game",
+        method="POST",
+        json={
+            "group_id": "g1",
+            "start_at": "2026-04-29T18:00:00Z",
+            "duration_hours": 2,
+            "question_count": 10
+        }
+    ):
+        # Act
+        response, status = controller.create_game()
+        data = response.get_json()
+
+    # Assert
+    assert status == HttpStatus.INTERNAL_SERVER_ERROR
+    assert data["error"] == "Failed to create group game."
+    mock_group_service.get_group.assert_called_once()
+    mock_group_service.create_game.assert_called_once()
