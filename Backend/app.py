@@ -137,6 +137,7 @@ FriendController(
 )
 GroupController(
     service=group_service,
+    notification_service=notification_service,
     get_user_id_func=get_user_id_from_request
 )
 StatisticsController(

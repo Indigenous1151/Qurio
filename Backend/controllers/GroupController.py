@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta, timezone
 from services.GroupService import GroupService
+from services.NotificationService import NotificationService
 from flask import Blueprint, request, jsonify
 from utils.HttpStatus import HttpStatus
 
 group_bp = Blueprint('group', __name__, url_prefix='/group')
 
 class GroupController:
-    def __init__(self, service: GroupService, get_user_id_func):
+    def __init__(self, service: GroupService, notification_service: NotificationService, get_user_id_func):
         self.__service = service
+        self.__notification_service = notification_service
         self.get_user_id = get_user_id_func
         self.__register_routes()
 
@@ -78,7 +80,11 @@ class GroupController:
             return jsonify({"message": "Successfully joined group", "success": successful}), HttpStatus.OK
 
         except Exception as e:
-            return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
+            status = HttpStatus.INTERNAL_SERVER_ERROR
+            # if the user already a member, then use 409 instead of 500
+            if str(e) == "User is already a member of this group":
+                status = HttpStatus.BAD_REQUEST
+            return jsonify({"error": str(e)}), status
 
     def leave_group(self):
         try:
@@ -111,7 +117,10 @@ class GroupController:
                 invited_by=user_id,
                 username=data['username']
             )
-            return jsonify({"message": "Invite sent successfully"}), HttpStatus.OK if success else HttpStatus.INTERNAL_SERVER_ERROR
+
+            if not success:
+                raise Exception("Invite user failed")
+            return jsonify({"message": "Invite sent successfully"}), HttpStatus.OK
         except Exception as e:
             return jsonify({"error": str(e)}), HttpStatus.INTERNAL_SERVER_ERROR
 
@@ -193,10 +202,23 @@ class GroupController:
                 }
             }
 
+            group = self.__service.get_group(group_id)
+            if not group:
+                return jsonify({"error": "Group not found"}), HttpStatus.NOT_FOUND
+
             response = self.__service.create_game(game_data)
 
             if not response or not response.data:
                 raise Exception("Failed to create group game.")
+
+            # send notification to the group
+            if self.__notification_service:
+                members = group.get("members", [])
+                for member_id in members:
+                    self.__notification_service.create_notification(
+                        member_id,
+                        "A new question set has been created by a member"
+                    )
 
             return jsonify({"message": "Group game created"}), HttpStatus.CREATED
 

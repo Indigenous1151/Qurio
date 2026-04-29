@@ -18,6 +18,3 @@ class BugReport:
             raise ValueError("Invalid Status")
         else:
             self.status = status
-
-    def to_dict(self) -> dict:
-        return self.__dict__

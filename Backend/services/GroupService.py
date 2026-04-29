@@ -29,7 +29,7 @@ class GroupService:
         group = self.__group_repo.get_group_by_invite_code(invite_code)
 
         if not group:
-            raise Exception("Invalid invite code")
+            raise Exception("No group exists with that invite code")
 
         group_id = group[0]["group_id"]
 
@@ -67,6 +67,19 @@ class GroupService:
             invited_by=invited_by,
             invited_user=receiver_id
         )
+        # print(f"receiver_id: {receiver_id}")
+        # check if user is already in group
+        group = self.__group_repo.get_group(group_id)
+        if not group:
+            raise Exception("Failed to find group")
+
+        if receiver_id in group["members"]:
+            raise Exception(f"{username} is already a member")
+
+        # check if there is already a pending invite
+        pending_invites = self.__group_repo.get_pending_invites(receiver_id)
+        if any(inv["group_id"] == group_id for inv in pending_invites):
+            raise Exception("Invite already pending")
 
         success = self.__group_repo.save_invite(invite)
 
