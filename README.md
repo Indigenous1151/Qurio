@@ -1,13 +1,13 @@
 # Qurio
-This is a trivia web application making use of React and Tailwind CSS for the front end and Flask for the backend with Supabase and MangoDB integrations.
 
+Qurio is a web application designed to allow users to play daily or classic trivia games individually or against friends. Qurio is intended for anyone who wants to continue to learn and challenge their knowledge with new categories and questions. The system will allow for user registration, play daily trivia, play classical trivia, add friends, and have in game currency. Users will be able to add friends to create a competition in who knows a category better. The in-game currency can be earned by playing trivia games or by purchasing the currency via credit card. It makes use of making use of React and Tailwind CSS for the front end and Flask for the backend with Supabase and MangoDB integrations.
 ---
 
 ![Software architecture diagram for Qurio](diagram.svg)
 
 ---
 
-This project combines the MVC architecture with the N-Tier/Layered architecture by organizing the components into three distinct layers. It seperates responsibilities into respective layers with arrows to indicate communication. Communication between layers follows a top-down request flow and bottom-up response flow. The layered structure enforces that each layer only communicates with the layer directly above or below itself. The MVC structure is demonstrated in how the React frontend pages function as View, the Flask controllers act as Controllers, and the model/service/repository classes combined make up the Model segment. By combining these two architectures, Qurio is  easier to organize, maintain, and scale.
+This project combines the MVC architecture with the N-Tier/Layered architecture by organizing the components into four distinct layers. It seperates responsibilities into respective layers with arrows to indicate communication. Communication between layers follows a top-down request flow and bottom-up response flow. The layered structure enforces that each layer only communicates with the layer directly above or below itself. The MVC structure is demonstrated in how the React frontend pages function as View, the Flask controllers act as Controllers, and the model/service/repository classes combined make up the Model segment. By combining these two architectures, Qurio is  easier to organize, maintain, and scale.
 
 
 ## (Layer 1) View/Presentation Layer
