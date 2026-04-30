@@ -1,6 +1,7 @@
 # Qurio
 
 Qurio is a web application designed to allow users to play daily or classic trivia games individually or against friends. Qurio is intended for anyone who wants to continue to learn and challenge their knowledge with new categories and questions. The system will allow for user registration, play daily trivia, play classical trivia, add friends, and have in game currency. Users will be able to add friends to create a competition in who knows a category better. The in-game currency can be earned by playing trivia games or by purchasing the currency via credit card. It makes use of making use of React and Tailwind CSS for the front end and Flask for the backend with Supabase and MangoDB integrations.
+
 ---
 
 ![Software architecture diagram for Qurio](diagram.svg)
